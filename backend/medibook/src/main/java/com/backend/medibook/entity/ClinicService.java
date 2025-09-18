@@ -1,13 +1,21 @@
 package com.backend.medibook.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "clinic_services")
 public class ClinicService {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
-    private int clinicServiceId;
+    private Integer clinicServiceId;
 
     @ManyToOne
     @JoinColumn(name = "specialtyId", nullable = false)

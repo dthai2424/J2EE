@@ -1,6 +1,15 @@
 package com.backend.medibook.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "clinic_doctors",uniqueConstraints = {
         @UniqueConstraint(
@@ -11,7 +20,7 @@ import jakarta.persistence.*;
 public class ClinicDoctor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int clinicDoctorId;
+    private Integer clinicDoctorId;
 
     @ManyToOne
     @JoinColumn(name = "clinicId", nullable = false)

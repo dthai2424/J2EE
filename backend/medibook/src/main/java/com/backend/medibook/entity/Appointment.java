@@ -1,14 +1,23 @@
 package com.backend.medibook.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 
 import java.time.LocalDateTime;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "appointments")
 public class Appointment {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
-    private int appointmentId;
+    private Integer appointmentId;
 
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
