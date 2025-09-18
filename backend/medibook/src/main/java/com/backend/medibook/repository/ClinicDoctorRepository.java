@@ -10,7 +10,7 @@ public interface ClinicDoctorRepository extends JpaRepository<ClinicDoctor,Integ
 
     List<ClinicDoctor> findByActiveAndDoctor_DoctorId(boolean active, Integer doctorId);
 
-    List<ClinicDoctor> findByActiveDoctor_DoctorIdAndClinic_clinicId(boolean active, Integer doctorId, Integer clinicId);
+    List<ClinicDoctor> findByActiveAndDoctor_DoctorIdAndClinic_clinicId(boolean active, Integer doctorId, Integer clinicId);
 
     List<ClinicDoctor> findByActiveAndSpecialty_SpecialtyIdAndClinic_ClinicId(boolean active, Integer specialtyId, Integer clinicId);
 

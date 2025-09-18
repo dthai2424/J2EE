@@ -20,6 +20,10 @@ public class ClinicService {
     private Integer clinicServiceId;
 
     @ManyToOne
+    @JoinColumn(name="clinicId", nullable = false)
+    private Clinic clinic;
+
+    @ManyToOne
     @JoinColumn(name = "specialtyId", nullable = false)
     private Specialty specialty;
 
