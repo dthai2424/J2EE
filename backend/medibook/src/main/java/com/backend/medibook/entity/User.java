@@ -3,10 +3,7 @@ package com.backend.medibook.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 
 import java.time.LocalDateTime;
@@ -15,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Builder
 @Table(name="users")
 
 public class User {
@@ -47,7 +45,7 @@ public class User {
     }
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role=Role.Patient;
 
     @Column(nullable = false)
     private boolean active = true;

@@ -2,9 +2,10 @@ package com.backend.medibook.repository;
 
 import com.backend.medibook.entity.ClinicDoctor;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
+@Repository
 public interface ClinicDoctorRepository extends JpaRepository<ClinicDoctor,Integer> {
     List<ClinicDoctor> findByActiveAndClinic_ClinicId(boolean active, Integer clinicId);
 
