@@ -11,7 +11,9 @@ public interface SpecialtyRepository extends JpaRepository<Specialty,Integer> {
 
     Optional<Specialty> findBySpecialtyIdAndActive(Integer specialtyId,boolean Active);
 
-    Optional<Specialty> findByNameContainingAndActive(String name,boolean active);
+    List<Specialty> findByNameContainingAndActive(String name,boolean active);
+
+    List<Specialty> findByDescriptionContainingAndActive(String description,boolean active);
 
     List<Specialty> findByActive(boolean active);
 

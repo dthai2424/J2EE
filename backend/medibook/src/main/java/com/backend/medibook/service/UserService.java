@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface UserService {
-    User create(UserDTO userDTO, String password);
+    UserDTO create(UserDTO userDTO, String password);
 
     List<UserDTO> getAll();
 
@@ -30,5 +30,7 @@ public interface UserService {
     UserDTO register(UserDTO userDTO, String password);
 
     boolean changeStatus(int id,boolean active);
+
+    boolean update(int id ,UserDTO userDTO);
 
 }

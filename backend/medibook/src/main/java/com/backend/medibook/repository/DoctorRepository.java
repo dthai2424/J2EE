@@ -15,4 +15,13 @@ public interface DoctorRepository extends JpaRepository<Doctor,Integer> {
 
     Optional<Doctor> findByLicenseNumber(String licenseNumber);
 
+    List<Doctor> findByUser_EmailContainingAndActive(String email,boolean active);
+
+    List<Doctor> findByUser_PhoneNumberContainingAndActive(String phoneNumber,boolean active);
+
+    List<Doctor> findByLicenseNumberContainingAndActive(String licenseNumber,boolean active);
+
+    List<Doctor> findByCareerStartDateBetweenAndActiveAndActive(LocalDateTime startDate,LocalDateTime endDate,boolean active);
+
+    List<Doctor> findByActive(boolean active);
 }

@@ -17,7 +17,7 @@ public class UserDTO {
     private String name;
     private String email;
     private String phoneNumber;
-    private Role role;
-
+    private Role role=Role.Patient;
+    private boolean active;
 
 }

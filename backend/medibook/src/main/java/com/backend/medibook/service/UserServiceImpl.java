@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User create(UserDTO userDTO, String password){
+    public UserDTO create(UserDTO userDTO, String password){
         userDTO.setUsername(userDTO.getUsername().toLowerCase());
         userDTO.setEmail(userDTO.getEmail().toLowerCase());
          userDTO.setName(userDTO.getName().toLowerCase());
@@ -57,7 +57,12 @@ public class UserServiceImpl implements UserService {
         password=passwordEncoder.encode(password);
         User user=userUtil.modelToEntity(userDTO);
         user.setPassword(password);
-        return user;
+        user=userRepository.save(user);
+        if(user==null){
+            throw new UserCreateException("Tạo user không thành công");
+        }
+        userDTO=userUtil.entityToModel(user);
+        return userDTO;
     }
     public List<UserDTO> getAll(){
         List<User> users=userRepository.findAll();
@@ -147,8 +152,8 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserDTO register(UserDTO userDTO, String password){
-        User user= create(userDTO,password);
-        userRepository.save(user);
+        userDTO= create(userDTO,password);
+
         return userDTO;
     }
 
@@ -157,8 +162,23 @@ public class UserServiceImpl implements UserService {
         Optional<User> user=userRepository.findById(id);
         if(user.isPresent()){
             UserDTO oldUser=userUtil.entityToModel(user.get());
+            if(!userUtil.validateName(userDTO.getName())){
+                throw new UserNameInvalidException("Tên user không hợp lệ");
+            }
             oldUser.setName(userDTO.getName());
+            if(!userUtil.validateEmail(userDTO.getEmail())){
+                throw new UserEmailInvalidException("Email user không hợp lệ");
+            }
+            if(userRepository.existsByEmail(userDTO.getEmail())){
+                throw new UserEmailAlreadyExistException("Email user đã tồn tại");
+            }
             oldUser.setEmail(userDTO.getEmail());
+            if(!userUtil.validatePhone(userDTO.getPhoneNumber())){
+                throw new UserPhoneInvalidException("Số điện thoại user không hợp lệ");
+            }
+            if(userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())){
+                throw new UserPhoneAlreadyExistException("Số điện thoại user đã tồn tại");
+            }
             oldUser.setPhoneNumber(userDTO.getPhoneNumber());
             userRepository.save(userUtil.modelToEntity(oldUser));
             return true;

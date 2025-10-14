@@ -22,11 +22,11 @@ public class ClinicUtil {
        return address.matches(addressRegex);
     }
     public ClinicDTO entityToModel(Clinic clinic){
-        ClinicDTO clinicDTO=ClinicDTO.builder().clinicId(clinic.getClinicId()).name(clinic.getName()).email(clinic.getEmail()).phoneNumber(clinic.getPhoneNumber()).address(clinic.getAddress()).build();
+        ClinicDTO clinicDTO=ClinicDTO.builder().clinicId(clinic.getClinicId()).name(clinic.getName()).email(clinic.getEmail()).phoneNumber(clinic.getPhoneNumber()).address(clinic.getAddress()).active(clinic.isActive()).build();
         return clinicDTO;
     }
     public Clinic modelToEntity(ClinicDTO clinicDTO){
-        Clinic clinic=Clinic.builder().clinicId(clinicDTO.getClinicId()).name(clinicDTO.getName()).email(clinicDTO.getEmail()).phoneNumber(clinicDTO.getPhoneNumber()).address(clinicDTO.getAddress()).build();
+        Clinic clinic=Clinic.builder().clinicId(clinicDTO.getClinicId()).name(clinicDTO.getName()).email(clinicDTO.getEmail()).phoneNumber(clinicDTO.getPhoneNumber()).address(clinicDTO.getAddress()).active(clinicDTO.isActive()).build();
         return clinic;
     }
 }

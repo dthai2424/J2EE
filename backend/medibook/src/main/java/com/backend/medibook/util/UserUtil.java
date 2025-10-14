@@ -23,11 +23,11 @@ public class UserUtil {
         return password.matches(passwordRegex);
     }
     public UserDTO entityToModel(User user){
-        UserDTO userDTO= UserDTO.builder().name(user.getName()).email(user.getEmail()).phoneNumber(user.getPhoneNumber()).role(user.getRole()).build();
+        UserDTO userDTO= UserDTO.builder().name(user.getName()).email(user.getEmail()).phoneNumber(user.getPhoneNumber()).role(user.getRole()).active(user.isActive()).build();
         return userDTO;
     }
     public User modelToEntity(UserDTO userDTO){
-        User user= User.builder().name(userDTO.getName()).email(userDTO.getEmail()).phoneNumber(userDTO.getPhoneNumber()).role(userDTO.getRole()).build();
+        User user= User.builder().name(userDTO.getName()).email(userDTO.getEmail()).phoneNumber(userDTO.getPhoneNumber()).role(userDTO.getRole()).active(userDTO.isActive()).build();
         return user;
     }
     public boolean validateUsername(String username){
