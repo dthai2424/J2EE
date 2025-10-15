@@ -113,8 +113,8 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public List<DoctorDTO> getByCarreerStartBetween(LocalDateTime startDate, LocalDateTime endDate,boolean active) {
-        List<Doctor> doctors=doctorRepository.findByCareerStartDateBetweenAndActiveAndActive(startDate,endDate,active);
+    public List<DoctorDTO> getByCareerStartBetween(LocalDateTime startDate, LocalDateTime endDate,boolean active) {
+        List<Doctor> doctors=doctorRepository.findByCareerStartDateBetweenAndActive(startDate,endDate,active);
         List<DoctorDTO> doctorDTOS=new ArrayList<>();
         for(Doctor doctor:doctors){
             DoctorDTO doctorDTO=doctorUtil.entityToModel(doctor);

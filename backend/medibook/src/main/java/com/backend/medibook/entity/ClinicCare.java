@@ -11,11 +11,11 @@ import lombok.*;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "clinic_services")
+@Table(name = "clinic_cares")
 public class ClinicCare {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
-    private Integer clinicServiceId;
+    private Integer clinicCareId;
 
     @ManyToOne
     @JoinColumn(name="clinicId", nullable = false)
@@ -25,7 +25,7 @@ public class ClinicCare {
     @JoinColumn(name = "specialtyId", nullable = false)
     private Specialty specialty;
 
-    @Pattern(regexp = "^[a-zA-Z0-9._-]$", message = "Tên chuyên khoa không hợp lệ")
+    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Tên chuyên khoa không hợp lệ")
     private String name;
 
     private String description;

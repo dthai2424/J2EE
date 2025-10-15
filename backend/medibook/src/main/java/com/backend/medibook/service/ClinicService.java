@@ -16,15 +16,9 @@ public interface ClinicService {
 
     ClinicDTO getById(Integer clinicId);
 
-    ClinicDTO getByName(String clinicName);
-
     List<ClinicDTO> getByNameContaining(String clinicName,boolean active);
 
-    ClinicDTO getByEmail(String email);
-
     List<ClinicDTO> getByEmailContaining(String email,boolean active);
-
-    ClinicDTO getByPhone(String phone);
 
     List<ClinicDTO> getByPhoneContaining(String phone,boolean active);
 

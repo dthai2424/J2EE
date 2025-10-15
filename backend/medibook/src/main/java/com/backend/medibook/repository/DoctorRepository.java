@@ -21,7 +21,7 @@ public interface DoctorRepository extends JpaRepository<Doctor,Integer> {
 
     List<Doctor> findByLicenseNumberContainingAndActive(String licenseNumber,boolean active);
 
-    List<Doctor> findByCareerStartDateBetweenAndActiveAndActive(LocalDateTime startDate,LocalDateTime endDate,boolean active);
+    List<Doctor> findByCareerStartDateBetweenAndActive(LocalDateTime startDate,LocalDateTime endDate,boolean active);
 
     List<Doctor> findByActive(boolean active);
 

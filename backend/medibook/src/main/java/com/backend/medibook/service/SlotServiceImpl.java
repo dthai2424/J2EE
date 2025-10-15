@@ -82,6 +82,6 @@ public class SlotServiceImpl implements SlotService {
 
     @Override
     public List<SlotDTO> getAfternoonSlot() {
-        return getTimeBetweenActiveSlot(LocalTime.of(12,1),LocalTime.of(7,0),true);
+        return getTimeBetweenActiveSlot(LocalTime.of(12,1),LocalTime.of(19,0),true);
     }
 }

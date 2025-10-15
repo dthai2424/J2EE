@@ -20,7 +20,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
 
-    @Pattern(regexp = "^[a-zA-Z0-9._-]$", message = "Username không hợp lệ")
+    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username không hợp lệ")
     @Column(nullable =false, unique=true)
     private String username;
 

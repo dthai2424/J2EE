@@ -24,6 +24,6 @@ public interface DoctorService {
 
     List<DoctorDTO> getByLicenseNumberContaining(String licenseNumber,boolean active);
 
-   List<DoctorDTO> getByCarreerStartBetween(LocalDateTime startDate, LocalDateTime endDate, boolean active);
+   List<DoctorDTO> getByCareerStartBetween(LocalDateTime startDate, LocalDateTime endDate, boolean active);
 
 }

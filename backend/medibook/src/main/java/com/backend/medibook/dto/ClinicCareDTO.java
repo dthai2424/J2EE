@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ClinicCareDTO {
-    private int clinicServiceId;
+    private int clinicCareId;
     private int clinicId;
     private int specialtyId;
     private String name;

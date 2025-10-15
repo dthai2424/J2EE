@@ -11,7 +11,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "appointments")
+@Table(name = "appointments", uniqueConstraints = {
+        @UniqueConstraint(
+                columnNames = {"doctorId", "slotId", "appointmentDate"},
+                name = "unique_doctor_slot_date_constraint"
+        )
+})
 public class Appointment {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
@@ -22,15 +27,11 @@ public class Appointment {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "doctorId", nullable = false)
-    private Doctor doctor;
+    @JoinColumn(name = "clinicDoctorId", nullable = false)
+    private ClinicDoctor clinicDoctor;
 
     @ManyToOne
-    @JoinColumn(name = "clinicId", nullable = false)
-    private Clinic clinic;
-
-    @ManyToOne
-    @JoinColumn(name = "clinicServiceId", nullable = false)
+    @JoinColumn(name = "clinicCareId", nullable = false)
     private ClinicCare clinicCare;
 
     @OneToOne

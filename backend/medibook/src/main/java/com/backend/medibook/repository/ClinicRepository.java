@@ -15,9 +15,9 @@ public interface ClinicRepository extends JpaRepository<Clinic, Integer> {
 
     List<Clinic> findByNameContainingAndActive(String name,boolean active);
 
-    List<Clinic> findByEmailAndActive(String email,boolean active);
+    List<Clinic> findByEmailContainingAndActive(String email,boolean active);
 
-    List<Clinic> findByPhoneNumberAndActive(String phoneNumber,boolean active);
+    List<Clinic> findByPhoneNumberContainingAndActive(String phoneNumber,boolean active);
 
     List<Clinic> findByAddressContainingAndActive(String address,boolean active);
 

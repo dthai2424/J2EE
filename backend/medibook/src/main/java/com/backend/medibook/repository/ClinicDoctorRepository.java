@@ -7,13 +7,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 @Repository
 public interface ClinicDoctorRepository extends JpaRepository<ClinicDoctor,Integer> {
-    List<ClinicDoctor> findByActiveAndClinic_ClinicId(boolean active, Integer clinicId);
+    List<ClinicDoctor> findByClinic_ClinicIdAndActive( Integer clinicId,boolean active);
 
-    List<ClinicDoctor> findByActiveAndDoctor_DoctorId(boolean active, Integer doctorId);
+    List<ClinicDoctor> findByDoctor_DoctorIdAndActive( Integer doctorId,boolean active);
 
-    List<ClinicDoctor> findByActiveAndDoctor_DoctorIdAndClinic_clinicId(boolean active, Integer doctorId, Integer clinicId);
+    List<ClinicDoctor> findByDoctor_DoctorIdAndClinic_clinicIdAndActive(Integer doctorId, Integer clinicId,boolean active);
 
-    List<ClinicDoctor> findByActiveAndSpecialty_SpecialtyIdAndClinic_ClinicId(boolean active, Integer specialtyId, Integer clinicId);
+    List<ClinicDoctor> findBySpecialty_SpecialtyIdAndClinic_ClinicIdAndActive( Integer specialtyId, Integer clinicId,boolean active);
+
+    List<ClinicDoctor> findByClinic_ClinicIdAndSpecialty_SpecialtyIdAndActive( Integer clinicId, Integer specialtyId,boolean active);
 
     boolean existsBySpecialty_SpecialtyIdAndDoctor_DoctorIdAndClinic_ClinicId(Integer specialtyId, Integer doctorId, Integer clinicId);
 

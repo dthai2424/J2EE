@@ -16,7 +16,7 @@ public class Specialty {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Integer specialtyId;
 
-    @Pattern(regexp = "^[a-zA-Z0-9._-]$", message = "Username không hợp lệ")
+    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username không hợp lệ")
     @Column(nullable = false, unique = true)
     private String name;
 

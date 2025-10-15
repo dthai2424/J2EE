@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService {
             UserDTO userDTO=userUtil.entityToModel(user.get());
             return userDTO;
         }else{
-            throw new UserNotFoundException("Không tìm thấy user với id này");
+            throw new UserNotFoundException("Không tìm thấy user với id:"+id);
         }
     }
     public UserDTO getByUsername(String username){

@@ -68,7 +68,7 @@ public class ClinicServiceImpl implements ClinicService {
             ClinicDTO clinicDTO= clinicUtil.entityToModel(clinic.get());
             return clinicDTO;
         }else{
-            throw new ClinicNotFoundException("Không tìm thấy clinic với id này");
+            throw new ClinicNotFoundException("Không tìm thấy clinic với id:"+clinicId);
         }
     }
 
@@ -89,43 +89,38 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
 
-    public ClinicDTO getByEmail(String email) {
-        return null;
-    }
 
     @Override
     public List<ClinicDTO> getByEmailContaining(String email, boolean active) {
-        return List.of();
-    }
-
-
-    public List<ClinicDTO> getByEmailContaining(String email) {
-        return List.of();
-    }
-
-
-    public ClinicDTO getByPhone(String phone) {
-        return null;
+        email= email.toLowerCase();
+        List<Clinic> clinics=clinicRepository.findByEmailContainingAndActive(email,active);
+        List<ClinicDTO> clinicDTOS=new ArrayList<>();
+        for(Clinic clinic:clinics){
+            clinicDTOS.add(clinicUtil.entityToModel(clinic));
+        }
+        return clinicDTOS;
     }
 
     @Override
     public List<ClinicDTO> getByPhoneContaining(String phone, boolean active) {
-        return List.of();
+
+        List<Clinic> clinics=clinicRepository.findByPhoneNumberContainingAndActive(phone,active);
+        List<ClinicDTO> clinicDTOS=new ArrayList<>();
+        for(Clinic clinic:clinics){
+            clinicDTOS.add(clinicUtil.entityToModel(clinic));
+        }
+        return clinicDTOS;
     }
 
     @Override
     public List<ClinicDTO> getByAddressContaining(String address, boolean active) {
-        return List.of();
+        List<Clinic> clinics=clinicRepository.findByAddressContainingAndActive(address,active);
+        List<ClinicDTO> clinicDTOS=new ArrayList<>();
+        for(Clinic clinic:clinics){
+            clinicDTOS.add(clinicUtil.entityToModel(clinic));
+        }
+        return clinicDTOS;
     }
 
-
-    public List<ClinicDTO> getByPhoneContaining(String phone) {
-        return List.of();
-    }
-
-
-    public List<ClinicDTO> getByAddressContaining(String address) {
-        return List.of();
-    }
 
 }

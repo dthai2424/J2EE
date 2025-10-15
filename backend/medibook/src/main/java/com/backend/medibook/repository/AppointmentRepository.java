@@ -1,27 +1,34 @@
 package com.backend.medibook.repository;
 
 import com.backend.medibook.entity.Appointment;
+import com.backend.medibook.entity.ClinicDoctor;
+import com.backend.medibook.entity.Slot;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+
 @Repository
-public interface AppointmentRepository extends JpaRepository<Appointment,Integer> {
-    Optional<Appointment> findByAppointmentId(Integer id);
+public interface AppointmentRepository extends JpaRepository<Appointment, Integer> {
 
-    List<Appointment> findByClinic_ClinicIdAndDoctor_DoctorIdAndAppointmentDateBetweenAndActive(Integer clinicId,Integer doctorId, LocalDateTime startOfDay,LocalDateTime endOfDay,boolean active);
 
-    List<Appointment> findByUser_UserIdAndActive(Integer userId,boolean active);
+    boolean existsByClinicDoctorAndSlotAndAppointmentDate(ClinicDoctor clinicDoctor, Slot slot, LocalDateTime appointmentDate);
 
-    List<Appointment> findByUser_UserIdAndClinicService_ClinicServiceIdAndActive(Integer userId,Integer clinicServiceId,boolean active);
 
-    List<Appointment> findByDoctor_DoctorIdAndClinic_ClinicIdAndAppointmentDateBetweenAndActive(Integer doctorId,Integer clinicId,LocalDateTime startDay,LocalDateTime endDate,boolean active);
 
-    List<Appointment> findByDoctor_DoctorIdAndActive(Integer doctorId,boolean active);
+    List<Appointment> findByUser_UserIdAndActive(Integer userId, boolean active);
 
-    List<Appointment> findByClinic_ClinicIdAndClinicService_ClinicServiceIdAndAppointmentDateBetweenAndActive(Integer clinicId,Integer clinicServiceId,LocalDateTime startDay,LocalDateTime endDate,boolean active);
+    /**
+     * Tìm các cuộc hẹn của một bác sĩ trong một khoảng thời gian (ví dụ: trong một ngày).
+     * Truy vấn lồng qua: Appointment -> ClinicDoctor -> Doctor
+     */
+    List<Appointment> findByClinicDoctor_Doctor_DoctorIdAndAppointmentDateBetween(Integer doctorId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
+    /**
+     * Tìm các cuộc hẹn tại một phòng khám trong một khoảng thời gian.
+     * Truy vấn lồng qua: Appointment -> ClinicDoctor -> Clinic
+     */
+    List<Appointment> findByClinicDoctor_Clinic_ClinicIdAndAppointmentDateBetween(Integer clinicId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
 }

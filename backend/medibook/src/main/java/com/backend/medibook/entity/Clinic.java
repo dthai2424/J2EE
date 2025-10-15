@@ -18,7 +18,7 @@ public class Clinic {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Integer clinicId;
 
-    @Pattern(regexp = "^[a-zA-Z0-9._-]$", message = "Tên không hợp lệ")
+    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Tên không hợp lệ")
     @Column(nullable = false)
     private String name;
 
