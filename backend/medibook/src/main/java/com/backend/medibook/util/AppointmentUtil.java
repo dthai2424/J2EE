@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AppointmentUtil {
-    AppointmentDTO entityToModel(Appointment appointment){
+    public AppointmentDTO entityToModel(Appointment appointment){
         return AppointmentDTO.builder()
                 .appointmentId(appointment.getAppointmentId())
                 .patientId(appointment.getUser().getUserId())
@@ -19,7 +19,7 @@ public class AppointmentUtil {
                 .active(appointment.isActive())
                 .build();
     }
-    Appointment modelToEntity(AppointmentDTO appointmentDTO, User patient, ClinicDoctor clinicDoctor, ClinicCare clinicCare, Slot slot){
+    public Appointment modelToEntity(AppointmentDTO appointmentDTO, User patient, ClinicDoctor clinicDoctor, ClinicCare clinicCare, Slot slot){
         return Appointment.builder()
                 .appointmentId(appointmentDTO.getAppointmentId())
                 .user(patient)

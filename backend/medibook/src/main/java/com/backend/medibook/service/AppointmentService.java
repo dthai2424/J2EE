@@ -44,7 +44,7 @@ public interface AppointmentService {
     /**
      * Lấy lịch sử hẹn của một bệnh nhân.
      */
-    List<AppointmentDTO> findAppointmentsByUser(Integer userId);
+    List<AppointmentDTO> findAppointmentsByUser(Integer userId,boolean active);
 
     /**
      * Xem tất cả lịch hẹn của một bác sĩ trong một ngày.
