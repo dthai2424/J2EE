@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ClinicRepository extends JpaRepository<Clinic, Integer> {
+public interface   ClinicRepository extends JpaRepository<Clinic, Integer> {
     List<Clinic> findByActive(boolean active);
 
     Optional<Clinic> findById(Integer id);

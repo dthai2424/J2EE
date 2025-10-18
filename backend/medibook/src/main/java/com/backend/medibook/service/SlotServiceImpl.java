@@ -22,7 +22,7 @@ public class SlotServiceImpl implements SlotService {
     @Autowired
     public SlotRepository slotRepository;
     @Override
-    public Slot create(SlotDTO slotDTO) {
+    public SlotDTO create(SlotDTO slotDTO) {
         if(slotDTO.getStartTime()==null||slotDTO.getEndTime()==null){
             throw new SlotInvalidException("Thời gian bắt đầu và kết thúc không hợp lệ");
         }
@@ -31,11 +31,11 @@ public class SlotServiceImpl implements SlotService {
         }
         Slot slot= slotUtil.modelToEntity(slotDTO);
         Slot savedSlot= slotRepository.save(slot);
-        return savedSlot;
+        return slotUtil.entityToModel(savedSlot);
     }
 
     @Override
-    public Slot update(SlotDTO slotDTO) {
+    public SlotDTO update(SlotDTO slotDTO) {
         if(slotDTO.getStartTime()==null||slotDTO.getEndTime()==null){
             throw new SlotInvalidException("Thời gian bắt đầu và kết thúc không hợp lệ");
         }
@@ -44,7 +44,7 @@ public class SlotServiceImpl implements SlotService {
         }
         Slot slot= slotUtil.modelToEntity(slotDTO);
         Slot updatedSlot= slotRepository.save(slot);
-        return updatedSlot;
+        return slotUtil.entityToModel(updatedSlot);
     }
 
     @Override

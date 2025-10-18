@@ -11,10 +11,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Builder
+
 @Table(name = "appointments", uniqueConstraints = {
         @UniqueConstraint(
-                columnNames = {"doctorId", "slotId", "appointmentDate"},
-                name = "unique_doctor_slot_date_constraint"
+                columnNames = {"clinicDoctorId", "slotId", "appointmentDate"},
+                name = "unique_clinic_doctor_slot_date_constraint" // Đổi tên cho hợp lý
         )
 })
 public class Appointment {

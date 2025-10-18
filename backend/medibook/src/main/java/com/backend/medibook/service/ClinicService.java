@@ -10,9 +10,11 @@ import java.util.List;
 
 @Service
 public interface ClinicService {
-    Clinic create(ClinicDTO clinicDTO);
+    ClinicDTO create(ClinicDTO clinicDTO);
 
     List<ClinicDTO> getAll();
+
+    ClinicDTO update(ClinicDTO clinicDTO);
 
     ClinicDTO getById(Integer clinicId);
 

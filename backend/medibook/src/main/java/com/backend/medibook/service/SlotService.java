@@ -7,9 +7,9 @@ import java.time.LocalTime;
 import java.util.List;
 
 public interface SlotService {
-    Slot create(SlotDTO slotDTO);
+    SlotDTO create(SlotDTO slotDTO);
 
-    Slot update(SlotDTO slotDTO);
+    SlotDTO update(SlotDTO slotDTO);
 
     SlotDTO getById(Integer slotId);
 

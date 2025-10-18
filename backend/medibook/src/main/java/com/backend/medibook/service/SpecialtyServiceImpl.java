@@ -28,9 +28,9 @@ public class SpecialtyServiceImpl implements SpecialtyService {
         if(specialtyDTO.getName()==null){
             throw new SpecialtyNameInvalidException("Tên chuyên khoa không hợp lệ");
         }
-        Specialty specialty=Specialty.builder().name(specialtyDTO.getName()).description(specialtyDTO.getDescription()).build();
-        return specialtyRepository.save(specialty)!=null?specialtyUtil.entityToModel(specialty):null;
-
+        Specialty specialty=specialtyUtil.modelToEntity(specialtyDTO);
+        specialty=specialtyRepository.save(specialty);
+        return specialtyUtil.entityToModel(specialty);
     }
 
     @Override
