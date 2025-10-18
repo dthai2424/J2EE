@@ -1,9 +1,10 @@
 package com.backend.medibook.controller;
 
 import com.backend.medibook.dto.ClinicDTO;
-import com.backend.medibook.exception.ClinicNameInvalidException;
-import com.backend.medibook.exception.ClinicNotFoundException;
-import com.backend.medibook.exception.ClinicPhoneInvalidException;
+// Import các exception này không còn cần thiết nữa nếu bạn không ném chúng ra
+// import com.backend.medibook.exception.ClinicNameInvalidException;
+// import com.backend.medibook.exception.ClinicNotFoundException;
+// import com.backend.medibook.exception.ClinicPhoneInvalidException;
 import com.backend.medibook.service.ClinicService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,73 +21,45 @@ public class ClinicController {
 
     @GetMapping("/all")
     public ResponseEntity<List<ClinicDTO>> getAllActiveClinic() {
-
-        try {
-            List<ClinicDTO> allClinics = clinicService.getAll();
-            return ResponseEntity.ok(allClinics);
-        } catch (Exception e) {
-//            Mất kết nối DB
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+// Nếu service có lỗi (ví dụ: mất kết nối DB),
+        // GlobalExceptionHandler sẽ tự động bắt Exception và trả về 500.
+        List<ClinicDTO> allClinics = clinicService.getAll();
+        return ResponseEntity.ok(allClinics);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createClinic(@RequestBody ClinicDTO clinicDTO) {
-        try {
-            ClinicDTO createdClinic = clinicService.create(clinicDTO);
-            return ResponseEntity.ok(createdClinic); // Trả về 200 OK
-        } catch (ClinicNameInvalidException | ClinicPhoneInvalidException e) {
-            // Người dùng nhập sai (400 Bad Request)
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        } catch (Exception e) {
-            // Lỗi server chung
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Đã có lỗi xảy ra ở server: " + e.getMessage());
-        }
+    public ResponseEntity<ClinicDTO> createClinic(@RequestBody ClinicDTO clinicDTO) {
+
+        // Nếu service ném ClinicNameInvalidException hoặc ClinicPhoneInvalidException,
+        // GlobalExceptionHandler sẽ tự động bắt và trả về 400 Bad Request.
+        ClinicDTO createdClinic = clinicService.create(clinicDTO);
+        return ResponseEntity.ok(createdClinic); // Trả về 200 OK
     }
 
     @PutMapping("/update")
-    public ResponseEntity<?> updateClinic(@RequestBody ClinicDTO clinicDTO) {
-        try {
-            ClinicDTO updatedClinic = clinicService.update(clinicDTO);
-            return ResponseEntity.ok(updatedClinic);
-        } catch (ClinicNotFoundException e) {
-            // Lỗi không tìm thấy (404 Not Found)
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-        } catch (ClinicNameInvalidException | ClinicPhoneInvalidException e) {
-            // Lỗi do người dùng nhập sai (400 Bad Request)
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        } catch (Exception e) {
-            // Lỗi server chung
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Đã có lỗi xảy ra ở server: " + e.getMessage());
-        }
+    public ResponseEntity<ClinicDTO> updateClinic(@RequestBody ClinicDTO clinicDTO) {
+
+        // GlobalExceptionHandler sẽ tự động bắt:
+        // - ClinicNotFoundException (404)
+        // - ClinicNameInvalidException (400)
+        // - ClinicPhoneInvalidException (400)
+        ClinicDTO updatedClinic = clinicService.update(clinicDTO);
+        return ResponseEntity.ok(updatedClinic);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getClinicById(@PathVariable Integer id) {
-        try {
-            ClinicDTO clinicDTO = clinicService.getById(id);
-            return ResponseEntity.ok(clinicDTO);
-        } catch (ClinicNotFoundException e) {
-            // Lỗi không tìm thấy (404 Not Found)
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Đã có lỗi xảy ra ở server: " + e.getMessage());
-        }
+    public ResponseEntity<ClinicDTO> getClinicById(@PathVariable Integer id) {
+
+        // Nếu service ném ClinicNotFoundException,
+        // GlobalExceptionHandler sẽ tự động bắt và trả về 404 Not Found.
+        ClinicDTO clinicDTO = clinicService.getById(id);
+        return ResponseEntity.ok(clinicDTO);
     }
+
+    // =================================================================
+    // CÁC HÀM TÌM KIẾM NÀY VỐN ĐÃ TỐT (KHÔNG CÓ TRY-CATCH)
+    // NÊN KHÔNG CẦN THAY ĐỔI
+    // =================================================================
 
     @GetMapping("/search/name")
     public ResponseEntity<List<ClinicDTO>> getClinicByName(
