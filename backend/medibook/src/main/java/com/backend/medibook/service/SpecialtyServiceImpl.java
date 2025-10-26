@@ -65,6 +65,7 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public List<SpecialtyDTO> getByNameContain(String name, boolean active) {
         name=name.toLowerCase();
+
         List<Specialty> specialties=specialtyRepository.findByNameContainingAndActive(name,active);
         List<SpecialtyDTO> specialtieDTOS=new ArrayList<>();
         for(Specialty specialty:specialties){
