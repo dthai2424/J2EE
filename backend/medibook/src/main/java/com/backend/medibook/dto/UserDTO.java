@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 
 
 public class UserDTO {
-    private int userId;
     private String username;
     private String name;
     private String email;
