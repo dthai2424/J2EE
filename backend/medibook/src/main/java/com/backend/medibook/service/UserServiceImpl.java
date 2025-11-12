@@ -1,7 +1,7 @@
 package com.backend.medibook.service;
 
+import com.backend.medibook.dto.AuthResponseDTO;
 import com.backend.medibook.dto.UserDTO;
-import com.backend.medibook.entity.Role;
 import com.backend.medibook.entity.User;
 import com.backend.medibook.exception.*;
 import com.backend.medibook.repository.UserRepository;
@@ -25,10 +25,16 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // THÊM JWTService
+    @Autowired
+    private JWTService jwtService;
+
     public UserDTO create(UserDTO userDTO, String password){
+        // Lỗi của bạn xảy ra ở dòng này (do IntelliJ/Lombok)
         userDTO.setUsername(userDTO.getUsername().toLowerCase());
+
         userDTO.setEmail(userDTO.getEmail().toLowerCase());
-         userDTO.setName(userDTO.getName().toLowerCase());
+        userDTO.setName(userDTO.getName().toLowerCase());
 
         if(!userUtil.validateEmail(userDTO.getEmail())){
             throw new UserEmailInvalidException("Email user không hợp lệ");
@@ -54,16 +60,23 @@ public class UserServiceImpl implements UserService {
         if(!userUtil.validatePassword(password)){
             throw new UserPasswordInvalidException("Mật khẩu phải ít nhất 8 kí tự, 1 số, hoa, thường, kí tự đặc biệt");
         }
+
         password=passwordEncoder.encode(password);
+
+        // UserUtil đã được sửa để map 'username'
         User user=userUtil.modelToEntity(userDTO);
         user.setPassword(password);
         user=userRepository.save(user);
+
         if(user==null){
             throw new UserCreateException("Tạo user không thành công");
         }
+
+        // UserUtil đã được sửa để map 'username'
         userDTO=userUtil.entityToModel(user);
         return userDTO;
     }
+
     public List<UserDTO> getAll(){
         List<User> users=userRepository.findAll();
         List<UserDTO> userDTOS=new ArrayList<>();
@@ -72,6 +85,7 @@ public class UserServiceImpl implements UserService {
         }
         return userDTOS;
     }
+
     public UserDTO getById(int id){
         Optional<User> user=userRepository.findByUserId(id);
         if(user.isPresent()){
@@ -81,6 +95,7 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("Không tìm thấy user với id:"+id);
         }
     }
+
     public UserDTO getByUsername(String username){
         username=username.toLowerCase();
         Optional<User> user=userRepository.findByUsername(username);
@@ -91,7 +106,8 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("Không tìm thấy user với username này");
         }
     }
-   public List<UserDTO> getByNameContaining(String name,boolean active){
+
+    public List<UserDTO> getByNameContaining(String name,boolean active){
         name=name.toLowerCase();
         List<User> users=userRepository.findByNameContainingAndActive(name,active);
         List<UserDTO> userDTOS=new ArrayList<>();
@@ -100,6 +116,7 @@ public class UserServiceImpl implements UserService {
         }
         return userDTOS;
     }
+
     public UserDTO getByEmail(String email){
         email=email.toLowerCase();
         Optional<User> user=userRepository.findByEmail(email);
@@ -110,6 +127,7 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("Không tìm thấy user với email này");
         }
     }
+
     public List<UserDTO> getByEmailContaining(String email,boolean active){
         email=email.toLowerCase();
         List<User> users=userRepository.findByEmailContainingAndActive(email,active);
@@ -120,10 +138,6 @@ public class UserServiceImpl implements UserService {
         return userDTOS;
     }
 
-
-
-
-
     public List<UserDTO> getByPhoneContaining(String phone,boolean active) {
         List<User> users=userRepository.findByPhoneNumberContainingAndActive(phone,active);
         List<UserDTO> userDTOS=new ArrayList<>();
@@ -133,19 +147,31 @@ public class UserServiceImpl implements UserService {
         return userDTOS;
     }
 
+    // ĐÃ SỬA: Trả về AuthResponseDTO chứa JWT
     public UserDTO login(String username, String password){
         username=username.toLowerCase();
-        Optional<User> user=userRepository.findByUsername(username);
-        if(user.isPresent()){
-           boolean isPasswordMatch=passwordEncoder.matches(password,user.get().getPassword());
+        Optional<User> userOpt = userRepository.findByUsername(username);
+
+        if(userOpt.isPresent()){
+            User user = userOpt.get();
+            boolean isPasswordMatch=passwordEncoder.matches(password,user.getPassword());
+
             if(isPasswordMatch){
-                if(user.get().isActive()==false){
+                if(!user.isActive()){
                     throw new UserNotActiveException("Tài khoản của bạn đã bị vô hiệu hóa");
                 }
-                UserDTO userDTO=userUtil.entityToModel(user.get());
-                return userDTO;
+
+                // TẠO JWT VÀ TRẢ VỀ
+                String jwt = jwtService.generateToken(user);
+                UserDTO userDTO = userUtil.entityToModel(user);
+
+                return AuthResponseDTO.builder()
+                        .accessToken(jwt)
+                        .user(userDTO)
+                        .build();
             }else{
-                throw new UserPasswordNotMatchException("Mật khẩu không đúng");            }
+                throw new UserPasswordNotMatchException("Mật khẩu không đúng");
+            }
         }else{
             throw new UserNotFoundException("Không tìm thấy user với username này");
         }
@@ -153,7 +179,6 @@ public class UserServiceImpl implements UserService {
 
     public UserDTO register(UserDTO userDTO, String password){
         userDTO= create(userDTO,password);
-
         return userDTO;
     }
 
@@ -165,22 +190,35 @@ public class UserServiceImpl implements UserService {
             if(!userUtil.validateName(userDTO.getName())){
                 throw new UserNameInvalidException("Tên user không hợp lệ");
             }
-            oldUser.setName(userDTO.getName());
-            if(!userUtil.validateEmail(userDTO.getEmail())){
-                throw new UserEmailInvalidException("Email user không hợp lệ");
+            // SỬA: Phải lấy user entity và cập nhật
+            User userToUpdate = user.get();
+
+            // Cập nhật Tên
+            userToUpdate.setName(userDTO.getName());
+
+            // Cập nhật Email (nếu thay đổi)
+            if (!userDTO.getEmail().equals(oldUser.getEmail())) {
+                if(!userUtil.validateEmail(userDTO.getEmail())){
+                    throw new UserEmailInvalidException("Email user không hợp lệ");
+                }
+                if(userRepository.existsByEmail(userDTO.getEmail())){
+                    throw new UserEmailAlreadyExistException("Email user đã tồn tại");
+                }
+                userToUpdate.setEmail(userDTO.getEmail());
             }
-            if(userRepository.existsByEmail(userDTO.getEmail())){
-                throw new UserEmailAlreadyExistException("Email user đã tồn tại");
+
+            // Cập nhật SĐT (nếu thay đổi)
+            if (!userDTO.getPhoneNumber().equals(oldUser.getPhoneNumber())) {
+                if(!userUtil.validatePhone(userDTO.getPhoneNumber())){
+                    throw new UserPhoneInvalidException("Số điện thoại user không hợp lệ");
+                }
+                if(userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())){
+                    throw new UserPhoneAlreadyExistException("Số điện thoại user đã tồn tại");
+                }
+                userToUpdate.setPhoneNumber(userDTO.getPhoneNumber());
             }
-            oldUser.setEmail(userDTO.getEmail());
-            if(!userUtil.validatePhone(userDTO.getPhoneNumber())){
-                throw new UserPhoneInvalidException("Số điện thoại user không hợp lệ");
-            }
-            if(userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())){
-                throw new UserPhoneAlreadyExistException("Số điện thoại user đã tồn tại");
-            }
-            oldUser.setPhoneNumber(userDTO.getPhoneNumber());
-            userRepository.save(userUtil.modelToEntity(oldUser));
+
+            userRepository.save(userToUpdate);
             return true;
         }else{
             throw new UserNotFoundException("Không tìm thấy user với id này");
