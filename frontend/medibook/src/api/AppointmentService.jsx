@@ -10,4 +10,13 @@ export const AppointmentService = {
   create: (appointmentData) => {
     return axiosClient.post("/appointment/create", appointmentData);
   },
+
+  // --- THÊM HÀM NÀY ---
+  // Lấy danh sách lịch hẹn của bác sĩ trong một ngày cụ thể
+  getAppointmentsByDoctorAndDate: (doctorId, date) => {
+    // date format: YYYY-MM-DD
+    return axiosClient.get(`/appointment/doctor/${doctorId}/date`, {
+      params: { date },
+    });
+  },
 };

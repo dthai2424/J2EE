@@ -15,6 +15,7 @@ import {
   ChevronRight,
   User,
   ArrowLeft,
+  Calendar,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -76,7 +77,6 @@ export function BookingPage() {
 
       if (doctorMap.has(doctorId)) {
         const existing = doctorMap.get(doctorId);
-        // Lưu thêm object specialty vào mảng nếu chưa có
         if (
           item.specialty &&
           !existing.specialties.some(
@@ -87,9 +87,11 @@ export function BookingPage() {
           existing.specialtyNames.push(item.specialty.name);
         }
       } else {
+        // item là ClinicDoctorDTO
+        // item.doctor là DoctorDTO
         doctorMap.set(doctorId, {
-          ...item,
-          // Khởi tạo mảng chứa các object chuyên khoa
+          ...item.doctor, // Spread properties of DoctorDTO (includes doctorId, user, etc.)
+          clinicDoctorId: item.clinicDoctorId, // Explicitly add clinicDoctorId from wrapper
           specialties: item.specialty ? [item.specialty] : [],
           specialtyNames: item.specialty?.name ? [item.specialty.name] : [],
         });
@@ -132,34 +134,91 @@ export function BookingPage() {
   };
 
   // --- XỬ LÝ CHỌN ITEM VÀ CHUYỂN TRANG ---
-  const handleConfirmSelection = (item) => {
+  const handleConfirmSelection = async (item) => {
+    // TRƯỜNG HỢP 1: CHỌN BÁC SĨ
     if (bookingStep === "select-doctor") {
-      // Vì hàm deduplicateDoctors đã spread item.doctor ra ngoài object item
-      // và gán clinicDoctorId vào item
-      // Nên item chính là thông tin bác sĩ cần truyền đi
+      // Item ở đây là object đã được gộp từ deduplicateDoctors
+      // Nó chứa: doctorId, user, licenseNumber (từ spread item.doctor) VÀ clinicDoctorId
 
-      // Tạo lại cấu trúc DoctorDTO/ClinicDoctorDTO để trang sau dễ dùng
+      console.log("Selected Doctor Item:", item); // Debug
+
       const doctorData = {
         clinicDoctorId: item.clinicDoctorId,
-        user: item.user, // item có chứa user do spread từ doctor
+        doctorId: item.doctorId, // <--- QUAN TRỌNG: Đảm bảo trường này được truyền đi
+        user: item.user,
         licenseNumber: item.licenseNumber,
         careerStartDate: item.careerStartDate,
-        // Các thuộc tính khác của bác sĩ...
       };
 
       navigate("/booking/confirmation", {
         state: {
           clinic: selectedClinic,
-          doctor: doctorData, // Truyền object bác sĩ đã chuẩn hóa
-          specialties: item.specialties, // Truyền danh sách chuyên khoa
+          doctor: doctorData,
+          specialties: item.specialties,
         },
       });
-    } else {
-      // Logic cho dịch vụ (giữ nguyên hoặc sửa nếu cần)
-      alert(`Đã chọn dịch vụ: ${item.name}`);
+    }
+    // TRƯỜNG HỢP 2: CHỌN DỊCH VỤ (TỰ ĐỘNG ASSIGN BÁC SĨ)
+    else {
+      try {
+        setModalLoading(true);
+
+        // 1. Lấy danh sách tất cả bác sĩ của phòng khám
+        const res = await ClinicDoctorService.getAllDoctorsInClinic(
+          selectedClinic.clinicId
+        );
+        const allDoctors = res.data;
+
+        // 2. Lọc ra các bác sĩ có chuyên khoa khớp với dịch vụ
+        const suitableDoctors = allDoctors.filter(
+          (doc) => doc.specialtyId === item.specialtyId
+        );
+
+        if (suitableDoctors.length === 0) {
+          alert(
+            "Hiện chưa có bác sĩ nào phụ trách dịch vụ này. Vui lòng chọn dịch vụ khác."
+          );
+          return;
+        }
+
+        // 3. Chọn ngẫu nhiên 1 bác sĩ
+        const randomDoctor =
+          suitableDoctors[Math.floor(Math.random() * suitableDoctors.length)];
+
+        // 4. Chuẩn bị dữ liệu bác sĩ
+        // randomDoctor là ClinicDoctorDTO raw từ API
+        const doctorData = {
+          clinicDoctorId: randomDoctor.clinicDoctorId,
+          doctorId: randomDoctor.doctor.doctorId, // <--- QUAN TRỌNG: Lấy ID từ nested object
+          user: randomDoctor.doctor.user,
+          licenseNumber: randomDoctor.doctor.licenseNumber,
+          careerStartDate: randomDoctor.doctor.careerStartDate,
+        };
+
+        const serviceSpecialty = {
+          specialtyId: item.specialtyId,
+          name: randomDoctor.specialty?.name || "Chuyên khoa dịch vụ",
+        };
+
+        navigate("/booking/confirmation", {
+          state: {
+            clinic: selectedClinic,
+            doctor: doctorData,
+            specialties: [serviceSpecialty],
+            preSelectedService: item,
+          },
+        });
+      } catch (error) {
+        console.error("Lỗi tự động chọn bác sĩ:", error);
+        alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+      } finally {
+        setModalLoading(false);
+        setSelectedClinic(null);
+      }
     }
     setSelectedClinic(null);
   };
+
   const formatCurrency = (val) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -301,6 +360,12 @@ export function BookingPage() {
                       </div>
                     </div>
                   </div>
+
+                  <div className="absolute top-0 right-4">
+                    <div className="w-8 h-10 bg-yellow-100 rounded-b-lg flex items-end justify-center pb-1 shadow-sm border-t-0 border border-yellow-200">
+                      <div className="w-4 h-4 bg-yellow-400 rounded-full border-2 border-white"></div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-auto border-t border-gray-100 p-4 bg-gray-50 flex justify-end">
@@ -427,8 +492,7 @@ export function BookingPage() {
                         const isDoctor = bookingStep === "select-doctor";
 
                         const title = isDoctor
-                          ? item.doctor?.user?.name ||
-                            `Bác sĩ #${item.doctorId}`
+                          ? item.user?.name || `Bác sĩ #${item.doctorId}`
                           : item.name || `Dịch vụ #${item.clinicCareId}`;
 
                         const subTitle = isDoctor

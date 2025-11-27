@@ -16,26 +16,40 @@ import {
   CheckCircle,
   CreditCard,
   Clock,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 export function BookingSchedule() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth(); // Lấy thông tin user từ context
+  const { user } = useAuth();
 
   const { clinic, doctor, service } = location.state || {};
 
+  // --- STATE ---
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
+
+  // Slot Data
   const [morningSlots, setMorningSlots] = useState([]);
   const [afternoonSlots, setAfternoonSlots] = useState([]);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [loadingSlots, setLoadingSlots] = useState(false);
 
+  // Selection & Loading
+  const [selectedSlot, setSelectedSlot] = useState(null);
+
+  // --- QUAN TRỌNG: State cho bookedSlotIds ---
+  const [bookedSlotIds, setBookedSlotIds] = useState([]);
+
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+  // Alert & Submit
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
   const [alertType, setAlertType] = useState("success");
 
+  // --- LOGIC NGÀY GIỚI HẠN ---
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -43,14 +57,14 @@ export function BookingSchedule() {
   const maxDate = new Date(tomorrow);
   maxDate.setDate(maxDate.getDate() + 15);
 
-  // 1. Redirect nếu thiếu dữ liệu cơ bản
+  // Redirect nếu thiếu data
   useEffect(() => {
     if (!clinic || !doctor || !service) {
       navigate("/booking");
     }
   }, [clinic, doctor, service, navigate]);
 
-  // 2. Load Slots
+  // 1. Lấy danh sách Slot (Sáng/Chiều)
   useEffect(() => {
     const fetchSlots = async () => {
       setLoadingSlots(true);
@@ -70,6 +84,70 @@ export function BookingSchedule() {
     fetchSlots();
   }, []);
 
+  // 2. Khi chọn ngày -> Gọi API check xem slot nào đã bị đặt
+  useEffect(() => {
+    const fetchBookedSlots = async () => {
+      if (!selectedDate || !doctor) return;
+
+      setCheckingAvailability(true);
+
+      // Reset booked slots trước khi fetch mới
+      setBookedSlotIds([]);
+
+      // --- FIX: Robust way to get doctorId for checking schedule ---
+      let doctorIdToCheck = null;
+
+      if (doctor.doctor && doctor.doctor.doctorId) {
+        doctorIdToCheck = doctor.doctor.doctorId;
+      } else if (doctor.doctorId) {
+        doctorIdToCheck = doctor.doctorId;
+      } else if (doctor.id) {
+        doctorIdToCheck = doctor.id;
+      }
+
+      console.log("Doctor Object:", doctor);
+      console.log("Doctor ID to check:", doctorIdToCheck);
+
+      if (!doctorIdToCheck) {
+        console.error(
+          "Không tìm thấy ID bác sĩ để check lịch. Object:",
+          doctor
+        );
+        setCheckingAvailability(false);
+        return;
+      }
+
+      try {
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+        const day = String(selectedDate.getDate()).padStart(2, "0");
+        const dateStr = `${year}-${month}-${day}`;
+
+        const res = await AppointmentService.getAppointmentsByDoctorAndDate(
+          doctorIdToCheck,
+          dateStr
+        );
+
+        const ids = res.data
+          .filter((app) => app.status !== "CANCELLED")
+          .map((app) => app.slot.slotId);
+
+        setBookedSlotIds(ids);
+      } catch (error) {
+        console.error("Lỗi check lịch trùng:", error);
+      } finally {
+        setCheckingAvailability(false);
+      }
+    };
+
+    if (selectedDate) {
+      fetchBookedSlots();
+    } else {
+      setBookedSlotIds([]);
+    }
+  }, [selectedDate, doctor]);
+
+  // --- FORMATTERS ---
   const formatCurrency = (val) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -81,6 +159,7 @@ export function BookingSchedule() {
     return timeString.substring(0, 5);
   };
 
+  // --- CALENDAR LOGIC ---
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
 
@@ -133,36 +212,36 @@ export function BookingSchedule() {
     setSelectedSlot(slot);
   };
 
+  // --- SUBMIT ---
   const handleConfirmBooking = async () => {
-    // --- KIỂM TRA USER ---
     if (!user || !user.userId) {
       setAlertType("error");
       setAlertMessage(
-        "Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại."
+        "Phiên đăng nhập không hợp lệ. Vui lòng đăng xuất và đăng nhập lại."
       );
-      // Có thể chuyển hướng về trang đăng nhập sau vài giây nếu muốn
       return;
     }
-
     if (!selectedDate || !selectedSlot) {
       setAlertType("error");
       setAlertMessage("Vui lòng chọn ngày và giờ khám.");
       return;
     }
 
-    // --- KIỂM TRA CLINIC DOCTOR ID ---
-    // Lấy clinicDoctorId từ đối tượng doctor được truyền qua
-    // Cần fallback nhiều trường hợp do cấu trúc DTO có thể khác nhau
-    const clinicDoctorId =
-      doctor.clinicDoctorId ||
-      (doctor.doctor ? doctor.doctor.clinicDoctorId : null);
+    let clinicDoctorId = null;
+    if (doctor.clinicDoctorId) {
+      clinicDoctorId = doctor.clinicDoctorId;
+    } else if (doctor.doctor && doctor.doctor.clinicDoctorId) {
+      clinicDoctorId = doctor.doctor.clinicDoctorId;
+    }
+
+    console.log("Doctor Object for Booking:", doctor);
+    console.log("Extracted ClinicDoctorID:", clinicDoctorId);
 
     if (!clinicDoctorId) {
       setAlertType("error");
       setAlertMessage(
-        "Lỗi dữ liệu: Không tìm thấy thông tin bác sĩ tại phòng khám này (thiếu clinicDoctorId)."
+        `Lỗi dữ liệu: Không tìm thấy mã liên kết bác sĩ (ClinicDoctorId). Vui lòng chọn lại bác sĩ.`
       );
-      console.error("Doctor object thiếu clinicDoctorId:", doctor);
       return;
     }
 
@@ -171,20 +250,21 @@ export function BookingSchedule() {
     const year = selectedDate.getFullYear();
     const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
     const day = String(selectedDate.getDate()).padStart(2, "0");
-    const time = selectedSlot.startTime;
 
-    // Format chuẩn ISO 8601 local time: YYYY-MM-DDTHH:mm:ss
+    // --- FIX: Construct LocalDateTime string instead of just date ---
+    // Backend expects "YYYY-MM-DDTHH:mm:ss"
+    const timeString = selectedSlot.startTime;
+    // Ensure time format is HH:mm:ss (e.g. "08:00:00")
+    const time = timeString.length === 5 ? `${timeString}:00` : timeString;
     const appointmentDateTime = `${year}-${month}-${day}T${time}`;
 
     const bookingData = {
-      patientId: user.userId, // ID lấy từ AuthContext
+      patientId: user.userId,
       clinicDoctorId: clinicDoctorId,
       clinicCareId: service.clinicCareId,
       slotId: selectedSlot.slotId,
       appointmentDate: appointmentDateTime,
     };
-
-    console.log("Sending Booking Data:", bookingData); // Debug log
 
     try {
       await AppointmentService.create(bookingData);
@@ -198,15 +278,14 @@ export function BookingSchedule() {
     } catch (error) {
       console.error("Lỗi đặt lịch:", error);
       setAlertType("error");
-      const msg =
-        error.response?.data || "Đặt lịch thất bại. Vui lòng thử lại.";
-      // Xử lý msg nếu nó là object
+      const msg = error.response?.data || "Đặt lịch thất bại.";
       setAlertMessage(typeof msg === "object" ? JSON.stringify(msg) : msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // --- RENDER HELPERS ---
   const renderCalendarGrid = () => {
     const totalDays = daysInMonth(
       currentDate.getMonth(),
@@ -254,6 +333,36 @@ export function BookingSchedule() {
     return days;
   };
 
+  const renderSlotButton = (slot) => {
+    const isBooked = bookedSlotIds.includes(slot.slotId);
+    const isSelected = selectedSlot?.slotId === slot.slotId;
+
+    return (
+      <button
+        key={slot.slotId}
+        onClick={() => !isBooked && setSelectedSlot(slot)}
+        disabled={isBooked}
+        className={`
+            py-2.5 px-4 rounded-lg border text-sm font-medium transition-all duration-200 relative min-w-[100px]
+            ${
+              isBooked
+                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70"
+                : isSelected
+                ? "bg-[#00B5F1] text-white border-[#00B5F1] shadow-md transform scale-105 ring-2 ring-blue-100"
+                : "bg-white text-gray-700 border-gray-200 hover:border-[#00B5F1] hover:text-[#00B5F1] hover:shadow-sm"
+            }
+        `}
+      >
+        {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+        {isBooked && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full shadow-sm z-10">
+            Kín
+          </span>
+        )}
+      </button>
+    );
+  };
+
   if (!clinic || !doctor || !service) return null;
 
   return (
@@ -273,65 +382,81 @@ export function BookingSchedule() {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* CỘT TRÁI */}
+          {/* --- CỘT TRÁI: CARD THÔNG TIN --- */}
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-              <div className="bg-[#00B5F1] p-4 text-white font-bold text-lg">
+            <div className="bg-white rounded-none shadow-sm border border-gray-100 overflow-hidden sticky top-24">
+              <div className="bg-[#00B5F1] p-4 text-white font-bold text-lg text-center uppercase">
                 Thông tin đặt khám
               </div>
-              <div className="p-6 space-y-6">
+              <div className="p-6 space-y-6 bg-[#F4F9FD]">
                 <div>
-                  <div className="flex items-start gap-3 mb-2">
+                  <div className="flex items-start gap-2 mb-2">
                     <Building2
-                      className="text-[#00B5F1] flex-shrink-0 mt-1"
+                      className="text-gray-500 flex-shrink-0 mt-1"
                       size={20}
                     />
                     <div>
-                      <h3 className="font-bold text-gray-800">{clinic.name}</h3>
+                      <h3 className="font-bold text-[#003452] text-lg">
+                        {clinic.name}
+                      </h3>
                       <p className="text-xs text-gray-500 mt-1">
                         {clinic.address}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="border-t border-gray-100"></div>
+                <div className="border-t border-gray-200"></div>
 
                 <div className="space-y-4 text-sm">
                   <div className="flex gap-3">
-                    <User size={18} className="text-gray-400 flex-shrink-0" />
+                    <div className="w-6 flex justify-center">
+                      <Stethoscope size={18} className="text-gray-400" />
+                    </div>
                     <div>
-                      <span className="block text-gray-500 text-xs uppercase font-semibold mb-1">
-                        Bác sĩ
+                      <span className="block text-[#003452] font-bold">
+                        Chuyên khoa:
                       </span>
-                      <span className="text-gray-800 font-medium">
+                      <span className="text-gray-700">{service.name}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className="w-6 flex justify-center">
+                      <User size={18} className="text-gray-400" />
+                    </div>
+                    <div>
+                      <span className="block text-[#003452] font-bold">
+                        Bác sĩ:
+                      </span>
+                      <span className="text-gray-700">
                         {doctor.doctor?.user?.name ||
                           doctor.user?.name ||
                           "Bác sĩ"}
                       </span>
                     </div>
                   </div>
+
                   <div className="flex gap-3">
-                    <FileText
-                      size={18}
-                      className="text-gray-400 flex-shrink-0"
-                    />
+                    <div className="w-6 flex justify-center">
+                      <FileText size={18} className="text-gray-400" />
+                    </div>
                     <div>
-                      <span className="block text-gray-500 text-xs uppercase font-semibold mb-1">
-                        Dịch vụ
+                      <span className="block text-[#003452] font-bold">
+                        Dịch vụ:
                       </span>
-                      <span className="text-gray-800 font-medium">
-                        {service.name}
-                      </span>
+                      <span className="text-gray-700">{service.name}</span>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <CreditCard
-                      size={18}
-                      className="text-gray-400 flex-shrink-0"
-                    />
+                    <div className="w-6 flex justify-center">
+                      <CreditCard
+                        size={18}
+                        className="text-gray-400 flex-shrink-0"
+                      />
+                    </div>
                     <div>
-                      <span className="block text-gray-500 text-xs uppercase font-semibold mb-1">
-                        Phí khám
+                      <span className="block text-[#003452] font-bold">
+                        Phí khám:
                       </span>
                       <span className="text-[#00B5F1] font-bold text-lg">
                         {formatCurrency(service.price)}
@@ -340,14 +465,18 @@ export function BookingSchedule() {
                   </div>
                 </div>
 
+                {/* Thời gian đã chọn */}
                 {selectedDate && selectedSlot && (
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 animate-fade-in">
-                    <p className="text-sm text-blue-800 font-medium mb-1">
-                      Thời gian dự kiến:
+                  <div className="bg-white p-3 border border-blue-200 shadow-sm rounded-md">
+                    <p className="text-xs text-gray-500 font-bold mb-1 uppercase">
+                      Thời gian khám:
                     </p>
-                    <p className="text-lg font-bold text-[#00B5F1]">
+                    <p className="text-base font-bold text-[#00B5F1]">
                       {formatTime(selectedSlot.startTime)} -{" "}
-                      {selectedDate.toLocaleDateString("vi-VN")}
+                      {formatTime(selectedSlot.endTime)}
+                    </p>
+                    <p className="text-sm text-gray-700 font-medium">
+                      Ngày {selectedDate.toLocaleDateString("vi-VN")}
                     </p>
                   </div>
                 )}
@@ -355,11 +484,11 @@ export function BookingSchedule() {
                 <button
                   onClick={handleConfirmBooking}
                   disabled={!selectedDate || !selectedSlot || isSubmitting}
-                  className={`w-full py-3 px-6 rounded-full font-bold transition shadow-md flex items-center justify-center gap-2 mt-4
+                  className={`w-full py-3 px-6 rounded font-bold transition shadow-md mt-4 text-white
                                 ${
                                   !selectedDate || !selectedSlot || isSubmitting
-                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-[#FFB340] text-white hover:bg-orange-400 hover:-translate-y-0.5 transform"
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-[#00B5F1] hover:bg-sky-600 transform hover:-translate-y-0.5"
                                 }
                             `}
                 >
@@ -369,143 +498,108 @@ export function BookingSchedule() {
             </div>
           </div>
 
-          {/* CỘT PHẢI: LỊCH & SLOT */}
+          {/* --- CỘT PHẢI: LỊCH & SLOT --- */}
           <div className="lg:col-span-8 space-y-6">
             {/* Calendar */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="bg-[#00B5F1] p-4 text-white font-bold text-lg text-center">
+            <div className="bg-white border border-gray-100 shadow-sm p-6 rounded-b-lg">
+              <div className="bg-[#00D4FF] p-4 text-white font-bold text-xl text-center rounded-t-lg shadow-sm -mx-6 -mt-6 mb-6">
                 Vui lòng chọn ngày khám
               </div>
-              <div className="p-6">
-                <div className="flex justify-center items-center gap-6 mb-6">
-                  <button
-                    onClick={handlePrevMonth}
-                    className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-                  <span className="text-xl font-bold text-[#00B5F1] uppercase tracking-wide">
-                    Tháng {currentDate.getMonth() + 1} -{" "}
-                    {currentDate.getFullYear()}
-                  </span>
-                  <button
-                    onClick={handleNextMonth}
-                    className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
-                </div>
 
-                <div className="grid grid-cols-7 mb-2">
-                  {["CN", "Hai", "Ba", "Tư", "Năm", "Sáu", "Bảy"].map(
-                    (d, i) => (
-                      <div
-                        key={i}
-                        className={`text-center font-bold text-sm py-2 ${
-                          i === 0 || i === 6
-                            ? "text-orange-500"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {d}
+              <div className="flex justify-center items-center gap-4 mb-6">
+                <button
+                  onClick={handlePrevMonth}
+                  className="p-1 hover:bg-gray-100 rounded-full transition text-[#00B5F1]"
+                >
+                  <ChevronLeft size={32} />
+                </button>
+                <span className="text-xl font-bold text-[#00B5F1] uppercase">
+                  THÁNG {currentDate.getMonth() + 1} -{" "}
+                  {currentDate.getFullYear()}
+                </span>
+                <button
+                  onClick={handleNextMonth}
+                  className="p-1 hover:bg-gray-100 rounded-full transition text-[#00B5F1]"
+                >
+                  <ChevronRight size={32} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-7 mb-2 border-b border-gray-200 pb-2">
+                {["CN", "Hai", "Ba", "Tư", "Năm", "Sáu", "Bảy"].map((d, i) => (
+                  <div
+                    key={i}
+                    className={`text-center font-bold text-base py-2 ${
+                      i === 0 || i === 6 ? "text-[#E58E26]" : "text-[#003452]"
+                    }`}
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 border-l border-t border-gray-100">
+                {renderCalendarGrid()}
+              </div>
+
+              {/* SLOTS: Hiện khi đã chọn ngày */}
+              {selectedDate && (
+                <div className="mt-8 animate-fade-in">
+                  <div className="flex justify-between items-center border-b-2 border-[#00D4FF] pb-2 mb-6">
+                    <span className="font-bold text-lg text-gray-800">
+                      Giờ khám ngày {selectedDate.toLocaleDateString("vi-VN")}
+                    </span>
+                    <button
+                      onClick={() => setSelectedDate(null)}
+                      className="text-sm text-gray-500 hover:text-red-500 underline"
+                    >
+                      Chọn lại ngày
+                    </button>
+                  </div>
+
+                  {loadingSlots || checkingAvailability ? (
+                    <div className="text-center py-8 text-gray-500 italic">
+                      Đang kiểm tra lịch trống...
+                    </div>
+                  ) : (
+                    <div className="space-y-8 pl-2">
+                      {/* BUỔI SÁNG */}
+                      <div>
+                        <h4 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                          <Sun size={20} className="text-orange-400" /> Buổi
+                          sáng
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                          {morningSlots.length > 0 ? (
+                            morningSlots.map((slot) => renderSlotButton(slot))
+                          ) : (
+                            <span className="text-gray-400 italic text-sm col-span-full">
+                              Không có lịch sáng.
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    )
+
+                      {/* BUỔI CHIỀU */}
+                      <div>
+                        <h4 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                          <Moon size={20} className="text-blue-500" /> Buổi
+                          chiều
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                          {afternoonSlots.length > 0 ? (
+                            afternoonSlots.map((slot) => renderSlotButton(slot))
+                          ) : (
+                            <span className="text-gray-400 italic text-sm col-span-full">
+                              Không có lịch chiều.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-
-                <div className="grid grid-cols-7 gap-2">
-                  {renderCalendarGrid()}
-                </div>
-              </div>
+              )}
             </div>
-
-            {selectedDate && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-fade-in-up">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <Clock className="text-[#00B5F1]" />
-                    Giờ khám ngày {selectedDate.toLocaleDateString("vi-VN")}
-                  </h3>
-                  <button
-                    onClick={() => setSelectedDate(null)}
-                    className="text-sm text-gray-500 hover:text-red-500 hover:underline"
-                  >
-                    Đóng
-                  </button>
-                </div>
-
-                {loadingSlots ? (
-                  <div className="text-center py-8 text-gray-500">
-                    Đang tải lịch khám...
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                    <div>
-                      <h4 className="font-bold text-gray-800 mb-4 text-base border-l-4 border-orange-400 pl-3">
-                        Buổi sáng
-                      </h4>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {morningSlots.length > 0 ? (
-                          morningSlots.map((slot) => (
-                            <button
-                              key={slot.slotId}
-                              onClick={() => handleSlotClick(slot)}
-                              className={`
-                                                    py-2.5 px-2 rounded-lg border text-sm font-medium transition-all duration-200
-                                                    ${
-                                                      selectedSlot?.slotId ===
-                                                      slot.slotId
-                                                        ? "bg-[#00B5F1] text-white border-[#00B5F1] shadow-md transform scale-105 ring-2 ring-blue-100"
-                                                        : "bg-white text-gray-600 border-gray-200 hover:border-[#00B5F1] hover:text-[#00B5F1] hover:shadow-sm"
-                                                    }
-                                                `}
-                            >
-                              {formatTime(slot.startTime)} -{" "}
-                              {formatTime(slot.endTime)}
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-sm text-gray-400 col-span-full italic pl-2">
-                            Không có lịch khám sáng.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-800 mb-4 text-base border-l-4 border-blue-400 pl-3">
-                        Buổi chiều
-                      </h4>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {afternoonSlots.length > 0 ? (
-                          afternoonSlots.map((slot) => (
-                            <button
-                              key={slot.slotId}
-                              onClick={() => handleSlotClick(slot)}
-                              className={`
-                                                    py-2.5 px-2 rounded-lg border text-sm font-medium transition-all duration-200
-                                                    ${
-                                                      selectedSlot?.slotId ===
-                                                      slot.slotId
-                                                        ? "bg-[#00B5F1] text-white border-[#00B5F1] shadow-md transform scale-105 ring-2 ring-blue-100"
-                                                        : "bg-white text-gray-600 border-gray-200 hover:border-[#00B5F1] hover:text-[#00B5F1] hover:shadow-sm"
-                                                    }
-                                                `}
-                            >
-                              {formatTime(slot.startTime)} -{" "}
-                              {formatTime(slot.endTime)}
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-sm text-gray-400 col-span-full italic pl-2">
-                            Không có lịch khám chiều.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
