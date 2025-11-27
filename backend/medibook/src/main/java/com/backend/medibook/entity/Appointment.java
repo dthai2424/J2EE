@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 
 @Table(name = "appointments", uniqueConstraints = {
         @UniqueConstraint(
-                columnNames = {"clinicDoctorId", "slotId", "appointmentDate"},
-                name = "unique_clinic_doctor_slot_date_constraint" // Đổi tên cho hợp lý
+                columnNames = {"clinicDoctorId", "slotId", "appointmentDate"}
+
         )
 })
 public class Appointment {

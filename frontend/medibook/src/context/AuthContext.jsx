@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   const login = (accessToken, userData) => {
     setToken(accessToken);
     setUser(userData);
-
+    console.log(userData);
     // Lưu vào Session Storage để giữ đăng nhập khi refresh trang
     sessionStorage.setItem("accessToken", accessToken);
     sessionStorage.setItem("user", JSON.stringify(userData));

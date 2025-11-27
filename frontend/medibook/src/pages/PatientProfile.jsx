@@ -10,6 +10,10 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  MapPin,
+  Stethoscope,
+  Building2,
+  CreditCard,
 } from "lucide-react";
 
 export function PatientProfile() {
@@ -18,12 +22,13 @@ export function PatientProfile() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Gọi API lấy lịch sử khám khi chuyển sang tab 'history'
+  // --- 1. Gọi API lấy dữ liệu ---
   useEffect(() => {
     if (activeTab === "history" && user?.userId) {
       setLoading(true);
       AppointmentService.getByUserId(user.userId)
         .then((res) => {
+          // Backend trả về List<AppointmentDTO> đã có full thông tin
           setAppointments(res.data);
         })
         .catch((err) => {
@@ -35,62 +40,78 @@ export function PatientProfile() {
     }
   }, [activeTab, user]);
 
-  // Helper để hiển thị trạng thái (Badge)
+  // --- 2. Các hàm Helper Format ---
+
+  // Format tiền (VD: 200.000 ₫)
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(value);
+  };
+
+  // Format ngày (VD: 20/11/2023)
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(date);
+  };
+
+  // Format giờ (Cắt giây nếu cần, VD: 08:00:00 -> 08:00)
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    return timeString.substring(0, 5);
+  };
+
+  // Render Badge trạng thái
   const renderStatus = (status) => {
     switch (status) {
       case "COMPLETED":
         return (
-          <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center gap-1">
-            <CheckCircle size={12} /> Đã khám xong
+          <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-green-200">
+            <CheckCircle size={12} /> Hoàn thành
           </span>
         );
       case "CONFIRMED":
         return (
-          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center gap-1">
+          <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-blue-200">
             <CheckCircle size={12} /> Đã xác nhận
           </span>
         );
       case "CANCELLED":
         return (
-          <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center gap-1">
+          <span className="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-red-200">
             <XCircle size={12} /> Đã hủy
           </span>
         );
       default: // PENDING
         return (
-          <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center gap-1">
+          <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-yellow-200">
             <Clock size={12} /> Chờ xác nhận
           </span>
         );
     }
   };
 
-  // Helper format ngày tháng
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  };
-
   return (
     <div className="bg-gray-50 min-h-screen py-10 px-4 md:px-20 font-['Inter']">
-      <div className=" mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl">
         {/* === SIDEBAR TRÁI === */}
-        <div className="col-span-1">
+        <div className="col-span-1 h-fit">
+          {/* Nút Thêm Hồ Sơ */}
           <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-            <button className="w-full bg-[#00B5F1] text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition">
+            <button className="w-full bg-[#00B5F1] text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition shadow-md shadow-sky-200">
               <PlusCircle size={20} />
-              Thêm hồ sơ
+              Thêm hồ sơ người thân
             </button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          {/* Menu Navigation */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
             <nav className="flex flex-col">
               <button
                 onClick={() => setActiveTab("profile")}
@@ -101,7 +122,7 @@ export function PatientProfile() {
                 }`}
               >
                 <User size={20} />
-                Hồ sơ bệnh nhân
+                Hồ sơ cá nhân
               </button>
               <button
                 onClick={() => setActiveTab("history")}
@@ -112,13 +133,13 @@ export function PatientProfile() {
                 }`}
               >
                 <FileText size={20} />
-                Phiếu khám bệnh
+                Lịch sử khám bệnh
               </button>
               <button className="flex items-center gap-3 px-6 py-4 text-left font-medium text-gray-600 hover:bg-gray-50 border-l-4 border-transparent">
                 <Bell size={20} />
-                Thông báo{" "}
-                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-auto">
-                  99+
+                Thông báo
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-auto">
+                  3
                 </span>
               </button>
             </nav>
@@ -129,122 +150,181 @@ export function PatientProfile() {
         <div className="col-span-1 md:col-span-3">
           {/* --- TAB 1: THÔNG TIN BỆNH NHÂN --- */}
           {activeTab === "profile" && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                Danh sách hồ sơ bệnh nhân
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b">
+                Thông tin tài khoản
               </h2>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 mb-4">
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Họ và tên</p>
-                    <h3 className="text-xl font-bold text-[#00B5F1] uppercase">
-                      {user?.name || "Chưa cập nhật tên"}
-                    </h3>
-                  </div>
-                  {/* Các nút hành động giả lập */}
-                  <div className="flex gap-4 mt-4 md:mt-0 text-sm font-medium">
-                    <button className="text-red-500 hover:underline flex items-center gap-1">
-                      Xóa hồ sơ
-                    </button>
-                    <button className="text-[#00B5F1] hover:underline flex items-center gap-1">
-                      Sửa hồ sơ
-                    </button>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                <div>
+                  <label className="text-sm text-gray-500 font-medium mb-1 block">
+                    Họ và tên
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {user?.name || "Chưa cập nhật"}
+                  </p>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-gray-700">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="text-gray-400" size={18} />
-                    <span className="font-medium">Ngày sinh:</span>
-                    <span>15/09/1990 (Dữ liệu mẫu)</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <User className="text-gray-400" size={18} />
-                    <span className="font-medium">Giới tính:</span>
-                    <span>Nam (Dữ liệu mẫu)</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-gray-400">
-                      <i className="fa-solid fa-phone w-[18px]"></i>
-                    </div>
-                    <span className="font-medium">Số điện thoại:</span>
-                    <span>{user?.phoneNumber}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <User className="text-gray-400" size={18} />
-                    <span className="font-medium">Email:</span>
-                    <span>{user?.email}</span>
-                  </div>
-                  <div className="col-span-1 md:col-span-2 flex items-start gap-3">
-                    <div className="text-gray-400 mt-1">
-                      <i className="fa-solid fa-location-dot w-[18px]"></i>
-                    </div>
-                    <div>
-                      <span className="font-medium">Địa chỉ:</span>
-                      <span className="ml-2">
-                        Thành phố Hồ Chí Minh (Dữ liệu mẫu)
-                      </span>
-                    </div>
-                  </div>
+                <div>
+                  <label className="text-sm text-gray-500 font-medium mb-1 block">
+                    Số điện thoại
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {user?.phoneNumber || "Chưa cập nhật"}
+                  </p>
                 </div>
+                <div>
+                  <label className="text-sm text-gray-500 font-medium mb-1 block">
+                    Email
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {user?.email || "Chưa cập nhật"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500 font-medium mb-1 block">
+                    Vai trò
+                  </label>
+                  <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm font-medium">
+                    {user?.role || "Bệnh nhân"}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-8 flex gap-4">
+                <button className="text-[#00B5F1] font-semibold hover:underline flex items-center gap-1">
+                  <User size={16} /> Chỉnh sửa thông tin
+                </button>
               </div>
             </div>
           )}
 
-          {/* --- TAB 2: PHIẾU KHÁM BỆNH (Appointment History) --- */}
+          {/* --- TAB 2: LỊCH SỬ KHÁM (Đã Link dữ liệu thật) --- */}
           {activeTab === "history" && (
             <div>
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                Lịch sử đặt khám
+                Danh sách phiếu khám
               </h2>
 
               {loading ? (
-                <div className="text-center py-10">Đang tải dữ liệu...</div>
+                <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+                  <p className="text-gray-500 animate-pulse">
+                    Đang tải dữ liệu...
+                  </p>
+                </div>
               ) : appointments.length === 0 ? (
-                <div className="bg-white p-10 rounded-xl shadow-sm text-center text-gray-500">
-                  Bạn chưa có lịch sử khám bệnh nào.
+                <div className="bg-white p-12 rounded-xl shadow-sm text-center border border-gray-100">
+                  <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText size={40} className="text-gray-300" />
+                  </div>
+                  <p className="text-gray-500 mb-4">
+                    Bạn chưa có lịch sử đặt khám nào.
+                  </p>
+                  <a
+                    href="/"
+                    className="text-[#00B5F1] font-bold hover:underline"
+                  >
+                    Đặt lịch ngay
+                  </a>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   {appointments.map((app) => (
                     // --- CARD APPOINTMENT ---
                     <div
                       key={app.appointmentId}
-                      className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#00B5F1] hover:shadow-md transition-shadow relative"
+                      className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 overflow-hidden"
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="font-bold text-lg text-gray-800">
-                          Phiếu khám #{app.appointmentId}
-                        </h4>
+                      {/* Header Card */}
+                      <div className="p-5 border-b border-gray-50 bg-gray-50/50 flex justify-between items-start">
+                        <div className="flex gap-3">
+                          <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100 h-fit">
+                            <Building2 size={24} className="text-[#00B5F1]" />
+                          </div>
+                          <div>
+                            {/* LINK DATA: Tên phòng khám */}
+                            <h3 className="text-lg font-bold text-[#003452] uppercase">
+                              {app.clinic?.name || "Phòng khám"}
+                            </h3>
+                            {/* LINK DATA: Địa chỉ phòng khám */}
+                            <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                              <MapPin size={14} className="flex-shrink-0" />
+                              {app.clinic?.address}
+                            </p>
+                          </div>
+                        </div>
+                        {/* LINK DATA: Trạng thái */}
                         {renderStatus(app.status)}
                       </div>
 
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <p className="flex gap-2">
-                          <Clock size={16} className="text-[#00B5F1]" />
-                          <span className="font-semibold">Thời gian:</span>
-                          {formatDate(app.appointmentDate)}
-                        </p>
+                      {/* Body Card */}
+                      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm text-gray-700">
+                        <div className="flex items-center gap-3 group">
+                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition">
+                            <Calendar size={16} className="text-[#00B5F1]" />
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Ngày khám</p>
+                            {/* LINK DATA: Ngày khám */}
+                            <p className="font-semibold text-base">
+                              {formatDate(app.appointmentDate)}
+                            </p>
+                          </div>
+                        </div>
 
-                        {/* Lưu ý: Backend DTO hiện chỉ trả về ID, chưa có tên Bác sĩ/Dịch vụ */}
-                        <p className="flex gap-2">
-                          <User size={16} className="text-[#00B5F1]" />
-                          <span className="font-semibold">Mã Bác sĩ:</span>
-                          {app.clinicDoctorId}
-                        </p>
+                        <div className="flex items-center gap-3 group">
+                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition">
+                            <Clock size={16} className="text-[#00B5F1]" />
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Giờ khám</p>
+                            {/* LINK DATA: Slot khám */}
+                            <p className="font-semibold text-base">
+                              {formatTime(app.slot?.startTime)} -{" "}
+                              {formatTime(app.slot?.endTime)}
+                            </p>
+                          </div>
+                        </div>
 
-                        <p className="flex gap-2">
-                          <FileText size={16} className="text-[#00B5F1]" />
-                          <span className="font-semibold">Mã Dịch vụ:</span>
-                          {app.clinicCareId}
-                        </p>
+                        <div className="flex items-center gap-3 group">
+                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition">
+                            <Stethoscope size={16} className="text-[#00B5F1]" />
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Bác sĩ</p>
+                            {/* LINK DATA: Tên bác sĩ */}
+                            <p className="font-semibold text-base">
+                              {app.doctor?.user?.name}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 group">
+                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition">
+                            <FileText size={16} className="text-[#00B5F1]" />
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Dịch vụ</p>
+                            {/* LINK DATA: Tên dịch vụ */}
+                            <p className="font-semibold text-base">
+                              {app.clinicCare?.name}
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t flex justify-end">
-                        <button className="text-[#00B5F1] text-sm font-semibold hover:underline">
-                          Xem chi tiết &rarr;
-                        </button>
+                      {/* Footer Card */}
+                      <div className="px-5 py-4 bg-[#F9FAFB] flex justify-between items-center border-t border-gray-100">
+                        <div className="text-xs text-gray-400">
+                          Mã phiếu: #{app.appointmentId}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CreditCard size={16} className="text-gray-400" />
+                          <span className="text-gray-600 text-sm font-medium">
+                            Phí khám:
+                          </span>
+                          {/* LINK DATA: Giá tiền */}
+                          <span className="text-lg font-bold text-[#00B5F1]">
+                            {formatCurrency(app.clinicCare?.price || 0)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}

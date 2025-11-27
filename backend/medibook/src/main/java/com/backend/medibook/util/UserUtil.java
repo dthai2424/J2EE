@@ -26,7 +26,7 @@ public class UserUtil {
         return password.matches(passwordRegex);
     }
     public UserDTO entityToModel(User user){
-        UserDTO userDTO= UserDTO.builder().username(user.getUsername()).name(user.getName()).email(user.getEmail()).phoneNumber(user.getPhoneNumber()).role(user.getRole()).active(user.isActive()).build();
+        UserDTO userDTO= UserDTO.builder().userId(user.getUserId()).username(user.getUsername()).name(user.getName()).email(user.getEmail()).phoneNumber(user.getPhoneNumber()).role(user.getRole()).active(user.isActive()).build();
         return userDTO;
     }
     public User modelToEntity(UserDTO userDTO){

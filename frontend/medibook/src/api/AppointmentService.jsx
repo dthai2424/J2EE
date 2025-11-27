@@ -5,4 +5,9 @@ export const AppointmentService = {
   getByUserId: (userId) => {
     return axiosClient.get(`/appointment/user/${userId}`);
   },
+
+  // Tạo cuộc hẹn mới
+  create: (appointmentData) => {
+    return axiosClient.post("/appointment/create", appointmentData);
+  },
 };

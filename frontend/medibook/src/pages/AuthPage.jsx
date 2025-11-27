@@ -1,12 +1,10 @@
-// File: frontend/medibook/src/pages/AuthPage.jsx
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthService } from "../api/AuthService";
 import { ErrorAlert } from "../components/ErrorAlert";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext"; // 1. Import AuthContext
 
-// --- Thành phần Input có kiểm soát ---
+// ... (Giữ nguyên các component con ControlledInput, ActionButton, GhostButton, SignUpForm, SignInForm)
 const ControlledInput = (props) => (
   <input
     {...props}
@@ -14,7 +12,6 @@ const ControlledInput = (props) => (
   />
 );
 
-// --- Thành phần Nút Bấm Chính ---
 const ActionButton = ({ children, type = "submit", disabled = false }) => (
   <button
     type={type}
@@ -32,7 +29,6 @@ const ActionButton = ({ children, type = "submit", disabled = false }) => (
   </button>
 );
 
-// --- Thành phần Nút Bấm "Ghost" ---
 const GhostButton = ({ children, onClick }) => (
   <button
     type="button"
@@ -43,7 +39,6 @@ const GhostButton = ({ children, onClick }) => (
   </button>
 );
 
-// --- Thành phần Form Đăng ký ---
 const SignUpForm = ({
   registerData,
   handleRegisterChange,
@@ -96,7 +91,6 @@ const SignUpForm = ({
   </form>
 );
 
-// --- Thành phần Form Đăng nhập ---
 const SignInForm = ({
   loginData,
   handleLoginChange,
@@ -132,11 +126,11 @@ const SignInForm = ({
     <ActionButton>Sign In</ActionButton>
   </form>
 );
+// ... (Kết thúc phần component con)
 
-// --- Thành phần App chính ---
 export function AuthPage() {
-  const { login } = useAuth();
   const navigate = useNavigate();
+  const { login } = useAuth(); // 2. Lấy hàm login từ Context
 
   const [isSignUpActive, setIsSignUpActive] = useState(false);
 
@@ -165,24 +159,26 @@ export function AuthPage() {
   const PASSWORD_REGEX =
     /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{8,}$/;
 
-  // --- Handlers ---
+  // ... (Giữ nguyên Handlers Change)
   const handleLoginChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
     setLoginError("");
     setGlobalMessage({ message: null });
   };
-
   const handleRegisterChange = (e) => {
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
     setRegisterError("");
     setGlobalMessage({ message: null });
   };
 
+  // Hàm đóng thông báo và điều hướng
   const handleCloseGlobalAlert = () => {
     if (globalMessage.type === "success") {
+      // Nếu đăng ký thành công -> Chuyển sang tab Đăng nhập
       if (isSignUpActive) {
-        handleSignInClick();
+        setIsSignUpActive(false);
       } else {
+        // Nếu đăng nhập thành công -> Về trang chủ
         navigate("/");
       }
     }
@@ -213,8 +209,7 @@ export function AuthPage() {
     return null;
   };
 
-  // --- Submit Logic ---
-
+  // --- XỬ LÝ ĐĂNG NHẬP ---
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError("");
@@ -226,36 +221,36 @@ export function AuthPage() {
         loginData.password
       );
 
+      // Cập nhật AuthContext ngay lập tức
+      login(response.data.accessToken, response.data.user);
+
       console.log("Login Successful:", response.data);
       setGlobalMessage({
         message: `Đăng nhập thành công! Chào mừng ${response.data.user.name}.`,
         type: "success",
       });
 
-      // Delay để hiện thông báo rồi mới chuyển trang
+      // Chuyển trang sau 1s
       setTimeout(() => {
-        login(response.data.accessToken, response.data.user);
         navigate("/");
-      }, 3000);
+      }, 1000);
     } catch (err) {
       let errorMessage =
         "Đăng nhập thất bại. Vui lòng kiểm tra Username và Password.";
-
       if (err.response && err.response.data) {
-        errorMessage = err.response.data;
+        errorMessage = err.response.data; // Lấy message từ backend
       }
-
       console.error("Login Error:", errorMessage, err.response);
       setLoginError(errorMessage);
       setGlobalMessage({ message: errorMessage, type: "error" });
     }
   };
 
+  // --- XỬ LÝ ĐĂNG KÝ ---
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setRegisterError("");
     setGlobalMessage({ message: null });
-    const { username, name, email, phoneNumber, password } = registerData;
 
     const validationError = validateRegister();
     if (validationError) {
@@ -268,11 +263,17 @@ export function AuthPage() {
     }
 
     try {
-      await AuthService.register(username, name, email, phoneNumber, password);
+      await AuthService.register(
+        registerData.username,
+        registerData.name,
+        registerData.email,
+        registerData.phoneNumber,
+        registerData.password
+      );
 
       console.log("Registration Successful");
 
-      // --- CẬP NHẬT: Clear form sau khi đăng ký thành công ---
+      // Clear form
       setRegisterData({
         username: "",
         name: "",
@@ -282,21 +283,23 @@ export function AuthPage() {
       });
 
       setGlobalMessage({
-        message: "Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.",
+        message: "Đăng ký thành công! Vui lòng đăng nhập.",
         type: "success",
       });
 
-      // Delay để hiện thông báo rồi mới chuyển qua tab Login
+      // Chuyển sang tab Đăng nhập sau 2s
       setTimeout(() => {
-        handleSignInClick();
-      }, 3000);
+        setIsSignUpActive(false);
+      }, 2000);
     } catch (err) {
       let errorMessage = "Đăng ký thất bại do lỗi không xác định.";
-
       if (err.response && err.response.data) {
-        errorMessage = err.response.data;
+        // Backend thường trả về object lỗi hoặc string
+        errorMessage =
+          typeof err.response.data === "string"
+            ? err.response.data
+            : JSON.stringify(err.response.data);
       }
-
       console.error("Register Error:", errorMessage, err.response);
       setRegisterError(errorMessage);
       setGlobalMessage({ message: errorMessage, type: "error" });

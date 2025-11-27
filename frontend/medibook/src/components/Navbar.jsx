@@ -1,15 +1,10 @@
 import logo from "../assets/logo_new.png";
 import { Button } from "./Button.jsx";
-import { Dropdown } from "./Dropdown.jsx";
 import { useNavigate } from "react-router-dom";
-
-// 1. Import useAuth từ Context
 import { useAuth } from "../context/AuthContext.jsx";
 
 export function Navbar() {
   const navigate = useNavigate();
-
-  // 2. Lấy state và hàm từ AuthContext
   const { user, logout } = useAuth();
 
   const goTo = (path) => {
@@ -17,8 +12,8 @@ export function Navbar() {
   };
 
   const handleLogout = () => {
-    logout(); // Xóa state và sessionStorage
-    navigate("/"); // Chuyển về trang chủ
+    logout();
+    navigate("/");
   };
 
   return (
@@ -33,43 +28,54 @@ export function Navbar() {
         </div>
         <p>&nbsp;</p>
 
-        {/* Navigation Links (Giữ nguyên) */}
+        {/* Navigation Links */}
         <p
           className="hover:text-[#00B5F1] cursor-pointer"
           onClick={() => goTo("/")}
         >
           Trang chủ
         </p>
-        <div className="flex items-center hover:text-[#00B5F1] cursor-pointer">
+        <div
+          className="flex items-center hover:text-[#00B5F1] cursor-pointer"
+          onClick={() => goTo("/booking")} // Link tới trang đặt khám
+        >
           <p>Cơ sở y tế </p>
-          <span className="text-2xl">&#9662;</span>
         </div>
         <div className="flex items-center hover:text-[#00B5F1] cursor-pointer">
           <p>Dịch vụ y tế</p>
-          <span className="text-2xl">&#9662;</span>
         </div>
         <div className="relative">
           <div className="flex items-center hover:text-[#00B5F1] cursor-pointer">
             <p>Chuyên khoa</p>
-            <span className="text-2xl">&#9662;</span>
           </div>
-          {/* <Dropdown /> */}
         </div>
         <p className="hover:text-[#00B5F1] cursor-pointer">Bác sĩ</p>
 
-        {/* 3. Tách phần trống ra (Spacer) */}
         <div className="flex-grow"></div>
 
-        {/* 4. Hiển thị có điều kiện (Conditional Rendering) */}
         {user ? (
-          // ĐÃ ĐĂNG NHẬP
-          <div className="flex items-center gap-5">
+          // === ĐÃ ĐĂNG NHẬP ===
+          <div className="flex items-center gap-3">
+            {/* SỬA NÚT ĐẶT KHÁM */}
+            <div onClick={() => goTo("/booking")}>
+              <Button color="bg-[#FFB340]" textColor="text-white">
+                Đặt khám
+              </Button>
+            </div>
+
+            <div onClick={() => goTo("/profile")}>
+              <Button color="bg-[#00B5F1]" textColor="text-white">
+                Hồ sơ
+              </Button>
+            </div>
+
             <span
-              className="text-lg font-medium text-gray-700 cursor-pointer hover:text-[#00B5F1] transition-colors"
-              onClick={() => goTo("/profile")} // <--- Thêm sự kiện chuyển trang
+              className="text-lg font-medium text-gray-700 cursor-pointer hover:text-[#00B5F1] transition-colors ml-2"
+              onClick={() => goTo("/profile")}
             >
               Chào, {user.name}!
             </span>
+
             <div onClick={handleLogout}>
               <Button color="bg-red-500" textColor="text-white">
                 Đăng xuất
@@ -77,7 +83,7 @@ export function Navbar() {
             </div>
           </div>
         ) : (
-          // CHƯA ĐĂNG NHẬT
+          // === CHƯA ĐĂNG NHẬP ===
           <div className="flex items-center gap-5">
             <div onClick={() => goTo("/auth")}>
               <Button
@@ -88,7 +94,8 @@ export function Navbar() {
                 Tài khoản
               </Button>
             </div>
-            <div onClick={() => goTo("/auth")}>
+            {/* SỬA NÚT ĐẶT KHÁM KHI CHƯA LOGIN (Cũng trỏ về booking để họ xem trước) */}
+            <div onClick={() => goTo("/booking")}>
               <Button
                 color="bg-[#FFB340]"
                 id="signinButton"
