@@ -10,5 +10,5 @@ public class SpecialtyDTO {
     private int specialtyId;
     private String name;
     private String description;
-    private boolean active;
+    private boolean active=true;
 }

@@ -9,7 +9,8 @@ import java.util.List;
 
 public interface ClinicCareService {
 
-
+    // Thêm mới: Lấy tất cả
+    List<ClinicCareDTO> getAll(boolean active);
     ClinicCareDTO create(ClinicCareDTO clinicCareDTO);
 
     ClinicCareDTO update(Integer clinicCareId, ClinicCareDTO clinicCareDTO);

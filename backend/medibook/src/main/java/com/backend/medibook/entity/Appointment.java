@@ -12,12 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 
-@Table(name = "appointments", uniqueConstraints = {
-        @UniqueConstraint(
-                columnNames = {"clinicDoctorId", "slotId", "appointmentDate"}
-
-        )
-})
+@Table(name = "appointments")
 public class Appointment {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
@@ -35,7 +30,7 @@ public class Appointment {
     @JoinColumn(name = "clinicCareId", nullable = false)
     private ClinicCare clinicCare;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "slotId", nullable = false)
     private Slot slot;
 

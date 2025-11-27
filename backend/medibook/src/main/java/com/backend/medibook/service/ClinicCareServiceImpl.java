@@ -32,7 +32,15 @@ public class ClinicCareServiceImpl implements ClinicCareService {
 
     @Autowired
     private SpecialtyRepository specialtyRepository;
-
+    @Override
+    public List<ClinicCareDTO> getAll(boolean active) {
+        List<ClinicCare> clinicCares = clinicCareRepository.findByActive(active);
+        List<ClinicCareDTO> clinicCareDTOS = new ArrayList<>();
+        for(ClinicCare clinicCare : clinicCares){
+            clinicCareDTOS.add(clinicCareUtil.entityToModel(clinicCare));
+        }
+        return clinicCareDTOS;
+    }
     @Override
     public ClinicCareDTO create(ClinicCareDTO clinicCareDTO) {
         clinicCareDTO.setName(clinicCareDTO.getName().toLowerCase());

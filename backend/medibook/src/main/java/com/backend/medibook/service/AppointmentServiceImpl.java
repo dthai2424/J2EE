@@ -37,6 +37,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional // Thêm annotation này để quản lý transaction
     public AppointmentDTO create(AppointmentDTO appointmentDTO) {
+
         Optional<User> patient = userRepository.findById(appointmentDTO.getPatientId());
         Optional<ClinicDoctor> clinicDoctor= clinicDoctorRepository.findById(appointmentDTO.getClinicDoctorId());
         Optional<ClinicCare> clinicCare= clinicCareRepository.findById(appointmentDTO.getClinicCareId());
@@ -62,8 +63,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (!clinicCare.get().getClinic().getClinicId().equals(clinicDoctor.get().getClinic().getClinicId())) {
             throw new ClinicCareNotFoundException("Dịch vụ đã chọn không được cung cấp tại cơ sở khám của bác sĩ này.");
         }
-        if(appointmentRepository.existsByClinicDoctorAndSlotAndAppointmentDate(
-                clinicDoctor.get(), slot.get(), appointmentDTO.getAppointmentDate()
+        if(appointmentRepository.existsByClinicDoctorAndSlotAndAppointmentDateAndStatusNot(
+                clinicDoctor.get(), slot.get(), appointmentDTO.getAppointmentDate(),Status.CANCELLED
         )){
             throw new AppointmentAlreadyExistException("Cuộc hẹn đã tồn tại với bác sĩ, khung giờ và ngày đã chọn.");
         }
@@ -180,6 +181,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<AppointmentDTO> findAppointmentsByUser(Integer userId,boolean active) {
+        active=true;
         Optional<User> user=userRepository.findById(userId);
         if(user.isEmpty()){
             throw new UserNotFoundException("Không tìm thấy user với id:"+userId);
@@ -189,6 +191,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         for(Appointment appointment:appointments){
             appointmentDTOS.add(appointmentUtil.entityToModel(appointment));
         }
+        System.out.println(appointmentDTOS.size()+"\n\n\n\n\n");
         return appointmentDTOS;
 
     }

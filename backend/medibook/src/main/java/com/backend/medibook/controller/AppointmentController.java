@@ -2,6 +2,7 @@ package com.backend.medibook.controller;
 
 import com.backend.medibook.dto.AppointmentDTO;
 import com.backend.medibook.service.AppointmentService;
+import com.backend.medibook.service.AppointmentServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,7 @@ import java.util.List;
 public class AppointmentController {
 
     @Autowired
-    private AppointmentService appointmentService;
+    private AppointmentServiceImpl appointmentService;
 
     // === CHỨC NĂNG CHO BỆNH NHÂN ===
 
@@ -97,6 +98,7 @@ public class AppointmentController {
             @RequestParam(defaultValue = "true") boolean active) {
 
         // GlobalExceptionHandler sẽ bắt lỗi 404 (User not found)
+        System.out.println(userId+"\n\n\n\n\n\n\n\n");
         List<AppointmentDTO> appointments = appointmentService.findAppointmentsByUser(userId, active);
         return ResponseEntity.ok(appointments);
     }

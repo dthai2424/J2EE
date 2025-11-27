@@ -22,5 +22,6 @@ public interface ClinicCareRepository extends JpaRepository<ClinicCare,Integer> 
     List<ClinicCare> findByClinic_ClinicIdAndSpecialty_SpecialtyIdAndNameContainingAndActive(Integer clinicId, Integer specialtyId, String name, boolean active);
 
     List<ClinicCare> findByClinic_ClinicIdAndDescriptionContainingAndActive(Integer clinicId, String description, boolean active);
-
+    // Thêm mới: Lấy tất cả dịch vụ đang active
+    List<ClinicCare> findByActive(boolean active);
 }

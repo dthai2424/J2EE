@@ -16,6 +16,6 @@ public class DoctorDTO {
     private UserDTO user;
     private String licenseNumber;
     private LocalDateTime careerStartDate;
-    private boolean active;
+    private boolean active=true;
 
 }

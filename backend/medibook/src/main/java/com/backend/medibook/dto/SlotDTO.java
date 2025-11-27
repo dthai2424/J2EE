@@ -14,5 +14,5 @@ public class SlotDTO {
     private int slotId;
     private LocalTime startTime;
     private LocalTime endTime;
-    private boolean active;
+    private boolean active=true;
 }

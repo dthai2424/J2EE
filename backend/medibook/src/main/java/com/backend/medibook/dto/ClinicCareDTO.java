@@ -20,5 +20,5 @@ public class ClinicCareDTO {
     private String name;
     private String description;
     private long price;
-    private boolean active;
+    private boolean active=true;
 }

@@ -25,7 +25,12 @@ public class ClinicCareController {
         ClinicCareDTO createdCare = clinicCareService.create(clinicCareDTO);
         return ResponseEntity.ok(createdCare);
     }
-
+    @GetMapping("/all")
+    public ResponseEntity<List<ClinicCareDTO>> getAll(
+            @RequestParam(defaultValue = "true") boolean active) {
+        List<ClinicCareDTO> cares = clinicCareService.getAll(active);
+        return ResponseEntity.ok(cares);
+    }
     /**
      * Cập nhật dịch vụ.
      * Dựa theo service impl,

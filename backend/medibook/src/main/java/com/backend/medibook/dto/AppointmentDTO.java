@@ -31,5 +31,5 @@ public class AppointmentDTO {
     @Builder.Default
     private Status status = Status.PENDING;
 
-    private boolean active;
+    private boolean active=true;
 }

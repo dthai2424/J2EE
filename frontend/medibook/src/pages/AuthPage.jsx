@@ -178,7 +178,7 @@ export function AuthPage() {
       if (isSignUpActive) {
         setIsSignUpActive(false);
       } else {
-        // Nếu đăng nhập thành công -> Về trang chủ
+        // Mặc định về trang chủ nếu đóng thông báo thủ công (có thể sửa nếu muốn)
         navigate("/");
       }
     }
@@ -209,7 +209,7 @@ export function AuthPage() {
     return null;
   };
 
-  // --- XỬ LÝ ĐĂNG NHẬP ---
+  // --- XỬ LÝ ĐĂNG NHẬP (ĐÃ CẬP NHẬT LOGIC ADMIN) ---
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError("");
@@ -224,21 +224,34 @@ export function AuthPage() {
       // Cập nhật AuthContext ngay lập tức
       login(response.data.accessToken, response.data.user);
 
+      // Lấy role của user để kiểm tra
+      const userRole = response.data.user.role;
+
       console.log("Login Successful:", response.data);
       setGlobalMessage({
         message: `Đăng nhập thành công! Chào mừng ${response.data.user.name}.`,
         type: "success",
       });
 
-      // Chuyển trang sau 1s
+      // Chuyển trang sau 1s (Điều hướng dựa trên Role)
       setTimeout(() => {
-        navigate("/");
+        if (userRole === "Admin") {
+          // Nếu là Admin -> Bay thẳng vào trang quản lý
+          navigate("/admin/doctors");
+        } else {
+          // Nếu là User thường/Bác sĩ -> Về trang chủ
+          navigate("/");
+        }
       }, 1000);
     } catch (err) {
       let errorMessage =
         "Đăng nhập thất bại. Vui lòng kiểm tra Username và Password.";
       if (err.response && err.response.data) {
-        errorMessage = err.response.data; // Lấy message từ backend
+        // Backend có thể trả về string hoặc object, xử lý an toàn
+        errorMessage =
+          typeof err.response.data === "string"
+            ? err.response.data
+            : err.response.data.message || JSON.stringify(err.response.data);
       }
       console.error("Login Error:", errorMessage, err.response);
       setLoginError(errorMessage);

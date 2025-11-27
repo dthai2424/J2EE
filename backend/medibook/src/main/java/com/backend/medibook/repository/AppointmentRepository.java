@@ -3,6 +3,7 @@ package com.backend.medibook.repository;
 import com.backend.medibook.entity.Appointment;
 import com.backend.medibook.entity.ClinicDoctor;
 import com.backend.medibook.entity.Slot;
+import com.backend.medibook.entity.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,7 +16,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
 
     boolean existsByClinicDoctorAndSlotAndAppointmentDate(ClinicDoctor clinicDoctor, Slot slot, LocalDateTime appointmentDate);
-
+    boolean existsByClinicDoctorAndSlotAndAppointmentDateAndStatusNot(
+            ClinicDoctor clinicDoctor,
+            Slot slot,
+            LocalDateTime appointmentDate,
+            Status status
+    );
     Optional<Appointment> findByAppointmentId(Integer appointmentId);
     
     List<Appointment> findByUser_UserIdAndActive(Integer userId, boolean active);

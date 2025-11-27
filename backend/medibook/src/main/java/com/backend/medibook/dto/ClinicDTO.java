@@ -14,5 +14,5 @@ public class ClinicDTO {
     private String phoneNumber;
     private String email;
     private String address;
-    private boolean active;
+    private boolean active=true;
 }

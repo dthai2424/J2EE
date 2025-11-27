@@ -20,5 +20,5 @@ public class ClinicDoctorDTO {
     private SpecialtyDTO specialty; // Thông tin chuyên khoa (tên khoa)
     // ----------------------------------------------------
 
-    private boolean active;
+    private boolean active=true;
 }
