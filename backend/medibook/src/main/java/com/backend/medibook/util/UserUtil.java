@@ -2,11 +2,14 @@ package com.backend.medibook.util;
 
 import com.backend.medibook.dto.UserDTO;
 import com.backend.medibook.entity.User;
+import lombok.Builder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+
+@Builder
 @Component
 public class UserUtil {
     public boolean validateEmail(String email){
@@ -23,11 +26,11 @@ public class UserUtil {
         return password.matches(passwordRegex);
     }
     public UserDTO entityToModel(User user){
-        UserDTO userDTO= UserDTO.builder().name(user.getName()).email(user.getEmail()).phoneNumber(user.getPhoneNumber()).role(user.getRole()).active(user.isActive()).build();
+        UserDTO userDTO= UserDTO.builder().username(user.getUsername()).name(user.getName()).email(user.getEmail()).phoneNumber(user.getPhoneNumber()).role(user.getRole()).active(user.isActive()).build();
         return userDTO;
     }
     public User modelToEntity(UserDTO userDTO){
-        User user= User.builder().name(userDTO.getName()).email(userDTO.getEmail()).phoneNumber(userDTO.getPhoneNumber()).role(userDTO.getRole()).active(userDTO.isActive()).build();
+        User user= User.builder().username(userDTO.getUsername()).name(userDTO.getName()).email(userDTO.getEmail()).phoneNumber(userDTO.getPhoneNumber()).role(userDTO.getRole()).active(userDTO.isActive()).build();
         return user;
     }
     public boolean validateUsername(String username){

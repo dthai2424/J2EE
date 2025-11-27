@@ -2,8 +2,10 @@ package com.backend.medibook.util;
 
 import com.backend.medibook.dto.SlotDTO;
 import com.backend.medibook.entity.Slot;
+import lombok.Builder;
 import org.springframework.stereotype.Component;
 
+@Builder
 @Component
 public class SlotUtil {
     public Slot modelToEntity(SlotDTO slotDTO){

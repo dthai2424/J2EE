@@ -39,7 +39,7 @@ public class User implements UserDetails {
     @Column(nullable=false, unique=true)
     private String email;
 
-    @Pattern(regexp = "^(0|\\+84)(\\d{9})$", message = "Số điện thoại không hợp lệ")
+
     @Column(nullable = false, unique = true)
     private String phoneNumber;
 

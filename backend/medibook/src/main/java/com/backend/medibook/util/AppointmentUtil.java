@@ -2,8 +2,10 @@ package com.backend.medibook.util;
 
 import com.backend.medibook.dto.AppointmentDTO;
 import com.backend.medibook.entity.*;
+import lombok.Builder;
 import org.springframework.stereotype.Component;
 
+@Builder
 @Component
 public class AppointmentUtil {
     public AppointmentDTO entityToModel(Appointment appointment){

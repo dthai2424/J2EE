@@ -18,12 +18,17 @@ import java.util.function.Function;
 @Service
 public class JWTServiceImpl implements JWTService {
 
-    // Lấy giá trị từ application.properties
-    @Value("${application.security.jwt.secret-key}")
-    private String secretKey;
+    // 1. Chuyển các trường thành 'final'
+    private final String secretKey;
+    private final long jwtExpiration;
 
-    @Value("${application.security.jwt.expiration}")
-    private long jwtExpiration;
+    // 2. Sử dụng Constructor Injection
+    public JWTServiceImpl(
+            @Value("${application.security.jwt.secret-key}") String secretKey,
+            @Value("${application.security.jwt.expiration}") long jwtExpiration) {
+        this.secretKey = secretKey;
+        this.jwtExpiration = jwtExpiration;
+    }
 
     @Override
     public String extractUsername(String token) {
@@ -45,7 +50,7 @@ public class JWTServiceImpl implements JWTService {
     private Claims extractAllClaims(String token) {
         // Sử dụng Jwts.parserBuilder() (phiên bản 0.12.x)
         return Jwts
-                .parser()
+                .parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)

@@ -1,5 +1,6 @@
 package com.backend.medibook.controller;
 
+import com.backend.medibook.dto.AuthResponseDTO;
 import com.backend.medibook.dto.UserDTO;
 import com.backend.medibook.dto.LoginRequestDTO;
 import com.backend.medibook.dto.RegisterRequestDTO;
@@ -28,6 +29,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<UserDTO> register(@RequestBody RegisterRequestDTO request) {
         // GlobalExceptionHandler sẽ xử lý lỗi validation/conflict
+        System.out.println("register!!!!!!");
         UserDTO newUser = userService.register(request.getUserDTO(), request.getPassword());
         return ResponseEntity.ok(newUser);
     }
@@ -37,11 +39,14 @@ public class UserController {
      * @param request Đối tượng chứa username và password.
      * @return UserDTO của người dùng nếu đăng nhập thành công.
      */
+
     @PostMapping("/login")
-    public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO request) {
-        // GlobalExceptionHandler sẽ xử lý lỗi 401 (sai pass/not active) hoặc 404
-        UserDTO user = userService.login(request.getUsername(), request.getPassword());
-        return ResponseEntity.ok(user);
+    // DÒNG NÀY ĐÃ ĐÚNG: Trả về ResponseEntity<AuthResponseDTO>
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO request) {
+
+        // DÒNG NÀY ĐÃ ĐÚNG: Gọi userService.login và nhận về AuthResponseDTO
+        AuthResponseDTO response = userService.login(request.getUsername(), request.getPassword());
+        return ResponseEntity.ok(response);
     }
 
     // === LẤY THÔNG TIN USER ===

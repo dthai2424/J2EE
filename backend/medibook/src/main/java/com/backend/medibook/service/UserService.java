@@ -1,5 +1,6 @@
 package com.backend.medibook.service;
 
+import com.backend.medibook.dto.AuthResponseDTO;
 import com.backend.medibook.dto.UserDTO;
 import com.backend.medibook.entity.Role;
 import com.backend.medibook.entity.User;
@@ -25,7 +26,7 @@ public interface UserService {
 
     List<UserDTO> getByPhoneContaining(String phone,boolean active);
 
-    UserDTO login(String username, String password);
+    AuthResponseDTO login(String username, String password);
 
     UserDTO register(UserDTO userDTO, String password);
 

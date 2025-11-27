@@ -64,7 +64,10 @@ export function Navbar() {
         {user ? (
           // ĐÃ ĐĂNG NHẬP
           <div className="flex items-center gap-5">
-            <span className="text-lg font-medium text-gray-700">
+            <span
+              className="text-lg font-medium text-gray-700 cursor-pointer hover:text-[#00B5F1] transition-colors"
+              onClick={() => goTo("/profile")} // <--- Thêm sự kiện chuyển trang
+            >
               Chào, {user.name}!
             </span>
             <div onClick={handleLogout}>
@@ -82,7 +85,7 @@ export function Navbar() {
                 id="signupButton"
                 textColor="text-white"
               >
-                Đăng ký
+                Tài khoản
               </Button>
             </div>
             <div onClick={() => goTo("/auth")}>
@@ -91,7 +94,7 @@ export function Navbar() {
                 id="signinButton"
                 textColor="text-white"
               >
-                Đăng nhập
+                Đặt khám
               </Button>
             </div>
           </div>

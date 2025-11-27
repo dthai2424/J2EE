@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthService } from "../api/AuthService";
-import { ErrorAlert } from "../components/ErrorAlert"; // THÊM IMPORT
+import { ErrorAlert } from "../components/ErrorAlert";
+import { useAuth } from "../context/AuthContext";
 
-// --- Thành phần Input có kiểm soát (Sử dụng cho cả Login/Register) ---
+// --- Thành phần Input có kiểm soát ---
 const ControlledInput = (props) => (
   <input
     {...props}
@@ -31,7 +32,7 @@ const ActionButton = ({ children, type = "submit", disabled = false }) => (
   </button>
 );
 
-// --- Thành phần Nút Bấm "Ghost" (cho Lớp phủ) ---
+// --- Thành phần Nút Bấm "Ghost" ---
 const GhostButton = ({ children, onClick }) => (
   <button
     type="button"
@@ -42,7 +43,7 @@ const GhostButton = ({ children, onClick }) => (
   </button>
 );
 
-// --- Thành phần Form Đăng ký (Nhận Props) ---
+// --- Thành phần Form Đăng ký ---
 const SignUpForm = ({
   registerData,
   handleRegisterChange,
@@ -54,7 +55,6 @@ const SignUpForm = ({
     className="flex flex-col items-center text-center h-full justify-center px-12"
   >
     <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-    {/* Hiển thị lỗi local */}
     {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
     <ControlledInput
@@ -96,7 +96,7 @@ const SignUpForm = ({
   </form>
 );
 
-// --- Thành phần Form Đăng nhập (Nhận Props) ---
+// --- Thành phần Form Đăng nhập ---
 const SignInForm = ({
   loginData,
   handleLoginChange,
@@ -108,7 +108,6 @@ const SignInForm = ({
     className="flex flex-col items-center text-center h-full justify-center px-12"
   >
     <h1 className="text-3xl font-bold mb-2">Sign In</h1>
-    {/* Hiển thị lỗi local */}
     {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
     <span className="text-sm text-gray-500 mb-4">or use your account</span>
@@ -136,16 +135,14 @@ const SignInForm = ({
 
 // --- Thành phần App chính ---
 export function AuthPage() {
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  // --- 1. UI State: Trạng thái chuyển đổi form ---
   const [isSignUpActive, setIsSignUpActive] = useState(false);
 
-  // --- 2. Data State: Dữ liệu và lỗi Đăng nhập (Login) ---
   const [loginData, setLoginData] = useState({ username: "", password: "" });
-  const [loginError, setLoginError] = useState(""); // Lỗi hiển thị trong form
+  const [loginError, setLoginError] = useState("");
 
-  // --- 3. Data State: Dữ liệu và lỗi Đăng ký (Register) ---
   const [registerData, setRegisterData] = useState({
     username: "",
     name: "",
@@ -153,28 +150,22 @@ export function AuthPage() {
     phoneNumber: "",
     password: "",
   });
-  const [registerError, setRegisterError] = useState(""); // Lỗi hiển thị trong form
+  const [registerError, setRegisterError] = useState("");
 
-  // --- 4. Global State: Thông báo pop-up ---
   const [globalMessage, setGlobalMessage] = useState({
     message: null,
     type: "error",
   });
 
-  // Regex kiểm tra bên Client-side (dựa trên UserUtil.java)
-  //
+  // Regex Validation
   const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
   const EMAIL_REGEX =
     /^[a-zA-Z0-9_+&*-]+(?:\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,7}$/;
   const PHONE_REGEX = /^\+?[1-9][0-9]{7,14}$/;
-  // Ít nhất 8 ký tự, 1 số, 1 thường, 1 hoa, 1 ký tự đặc biệt (@#$%^&+=)
   const PASSWORD_REGEX =
     /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{8,}$/;
-  // Name validation: Phức tạp với Unicode, dùng kiểm tra cơ bản và dựa vào Backend
-  const NAME_BASIC_REGEX = /^[a-zA-Z\s.'-]+$/;
-  // (Lưu ý: Để hỗ trợ tiếng Việt, cần regex phức tạp hơn hoặc flag /u trong môi trường hỗ trợ)
 
-  // --- Handlers Clear/Change ---
+  // --- Handlers ---
   const handleLoginChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
     setLoginError("");
@@ -188,10 +179,17 @@ export function AuthPage() {
   };
 
   const handleCloseGlobalAlert = () => {
+    if (globalMessage.type === "success") {
+      if (isSignUpActive) {
+        handleSignInClick();
+      } else {
+        navigate("/");
+      }
+    }
     setGlobalMessage({ message: null });
   };
 
-  // --- Logic Client-side Validation (Đăng ký) ---
+  // --- Validation ---
   const validateRegister = () => {
     const { username, name, email, phoneNumber, password } = registerData;
     if (!username || !name || !email || !phoneNumber || !password) {
@@ -212,10 +210,10 @@ export function AuthPage() {
     if (!PASSWORD_REGEX.test(password)) {
       return "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số, và ký tự đặc biệt.";
     }
-    return null; // Không có lỗi
+    return null;
   };
 
-  // --- Logic Submit API ---
+  // --- Submit Logic ---
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -230,23 +228,26 @@ export function AuthPage() {
 
       console.log("Login Successful:", response.data);
       setGlobalMessage({
-        message: `Đăng nhập thành công! Chào mừng ${response.data.name}.`,
+        message: `Đăng nhập thành công! Chào mừng ${response.data.user.name}.`,
         type: "success",
       });
 
-      // Chờ pop-up hiển thị rồi chuyển hướng
-      setTimeout(() => navigate("/"), 500);
+      // Delay để hiện thông báo rồi mới chuyển trang
+      setTimeout(() => {
+        login(response.data.accessToken, response.data.user);
+        navigate("/");
+      }, 3000);
     } catch (err) {
       let errorMessage =
         "Đăng nhập thất bại. Vui lòng kiểm tra Username và Password.";
 
       if (err.response && err.response.data) {
-        errorMessage = err.response.data; // Lấy lỗi từ Backend
+        errorMessage = err.response.data;
       }
 
       console.error("Login Error:", errorMessage, err.response);
-      setLoginError(errorMessage); // Lỗi local (dưới form)
-      setGlobalMessage({ message: errorMessage, type: "error" }); // Lỗi Global (Pop-up)
+      setLoginError(errorMessage);
+      setGlobalMessage({ message: errorMessage, type: "error" });
     }
   };
 
@@ -270,27 +271,39 @@ export function AuthPage() {
       await AuthService.register(username, name, email, phoneNumber, password);
 
       console.log("Registration Successful");
+
+      // --- CẬP NHẬT: Clear form sau khi đăng ký thành công ---
+      setRegisterData({
+        username: "",
+        name: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+      });
+
       setGlobalMessage({
         message: "Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.",
         type: "success",
       });
 
-      // Chuyển về form đăng nhập sau khi đăng ký thành công
-      handleSignInClick();
+      // Delay để hiện thông báo rồi mới chuyển qua tab Login
+      setTimeout(() => {
+        handleSignInClick();
+      }, 3000);
     } catch (err) {
       let errorMessage = "Đăng ký thất bại do lỗi không xác định.";
 
       if (err.response && err.response.data) {
-        errorMessage = err.response.data; // Lấy lỗi Conflict/Bad Request từ Backend
+        errorMessage = err.response.data;
       }
 
       console.error("Register Error:", errorMessage, err.response);
-      setRegisterError(errorMessage); // Lỗi local
-      setGlobalMessage({ message: errorMessage, type: "error" }); // Lỗi Global (Pop-up)
+      setRegisterError(errorMessage);
+      setGlobalMessage({ message: errorMessage, type: "error" });
     }
   };
 
-  // --- Logic chuyển đổi UI ---
+  // --- UI Transitions ---
   const handleSignUpClick = () => {
     setIsSignUpActive(true);
     setLoginError("");
@@ -306,7 +319,6 @@ export function AuthPage() {
   };
 
   return (
-    // Component ErrorAlert được đặt ở cấp cao nhất để hiển thị pop-up
     <>
       <ErrorAlert
         message={globalMessage.message}
@@ -317,7 +329,7 @@ export function AuthPage() {
       <div className="bg-gray-100 flex items-center justify-center min-h-screen w-screen p-4 font-['Inter',_sans-serif]">
         {/* Container chính */}
         <div className="bg-white rounded-2xl shadow-2xl relative overflow-hidden w-full max-w-4xl min-h-[600px] h-3xl">
-          {/* Panel Đăng ký (Create Account) */}
+          {/* Panel Đăng ký */}
           <div
             className={`
                       sign-up-container absolute top-0 left-0 w-1/2 h-full 
@@ -337,7 +349,7 @@ export function AuthPage() {
             />
           </div>
 
-          {/* Panel Đăng nhập (Sign In) */}
+          {/* Panel Đăng nhập */}
           <div
             className={`
                       sign-in-container absolute top-0 left-0 w-1/2 h-full 
@@ -357,7 +369,7 @@ export function AuthPage() {
             />
           </div>
 
-          {/* Lớp phủ (Overlay) Container */}
+          {/* Lớp phủ (Overlay) */}
           <div
             className={`
                       overlay-container absolute top-0 left-1/2 w-1/2 h-full overflow-hidden z-50 
@@ -365,7 +377,6 @@ export function AuthPage() {
                       ${isSignUpActive ? "-translate-x-full" : "translate-x-0"}
                   `}
           >
-            {/* Lớp phủ bên trong (phần màu xanh) */}
             <div
               className={`
                           overlay relative bg-gradient-to-r from-sky-400 to-sky-500 text-white 
@@ -377,7 +388,7 @@ export function AuthPage() {
                           }
                       `}
             >
-              {/* Panel bên trái của lớp phủ (Hiển thị khi Đăng nhập) */}
+              {/* Panel trái (cho Đăng nhập) */}
               <div
                 className={`
                               overlay-left-panel absolute top-0 left-0 w-1/2 h-full 
@@ -392,7 +403,7 @@ export function AuthPage() {
                 <GhostButton onClick={handleSignUpClick}>Sign Up</GhostButton>
               </div>
 
-              {/* Panel bên phải của lớp phủ (Hiển thị khi Đăng ký) */}
+              {/* Panel phải (cho Đăng ký) */}
               <div
                 className={`
                               overlay-right-panel absolute top-0 left-1/2 w-1/2 h-full 

@@ -3,7 +3,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import { Routes, Route } from "react-router-dom";
-
+import { PatientProfile } from "./pages/PatientProfile.jsx";
 import { Landing } from "./pages/Landing.jsx";
 import { AuthPage } from "./pages/AuthPage.jsx";
 import { Navbar } from "./components/Navbar.jsx";
@@ -20,6 +20,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<AuthPage />}></Route>
+        <Route path="/profile" element={<PatientProfile />} />
       </Routes>
       <Footers />
     </>

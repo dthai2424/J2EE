@@ -27,7 +27,8 @@
         <url/>
     </scm>
     <properties>
-        <java.version>23</java.version>
+        <!-- Giữ Java 17 theo file mới của bạn -->
+        <java.version>17</java.version>
     </properties>
     <dependencies>
         <dependency>
@@ -83,25 +84,39 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- START: JWT Dependencies -->
+        <!-- Các dependency mới bạn đã thêm -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Giữ phiên bản JWT 0.11.5 theo file mới của bạn -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.12.5</version>
+            <version>0.11.5</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.12.5</version>
+            <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
-            <version>0.12.5</version>
+            <artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson -->
+            <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
-        <!-- END: JWT Dependencies -->
     </dependencies>
 
     <build>
@@ -113,17 +128,11 @@
                 <configuration>
                     <!-- Use the Java release configured in properties -->
                     <release>${java.version}</release>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.springframework.boot</groupId>
-                            <artifactId>spring-boot-configuration-processor</artifactId>
-                        </path>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.36</version>
-                        </path>
-                    </annotationProcessorPaths>
+
+                    <!--
+                      SỬA LỖI: Đã xóa khối <annotationProcessorPaths>
+                      Spring Boot Parent POM sẽ tự động cấu hình điều này.
+                    -->
                 </configuration>
             </plugin>
             <plugin>

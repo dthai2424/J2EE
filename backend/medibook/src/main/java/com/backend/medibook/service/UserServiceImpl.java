@@ -148,7 +148,7 @@ public class UserServiceImpl implements UserService {
     }
 
     // ĐÃ SỬA: Trả về AuthResponseDTO chứa JWT
-    public UserDTO login(String username, String password){
+    public AuthResponseDTO login(String username, String password){
         username=username.toLowerCase();
         Optional<User> userOpt = userRepository.findByUsername(username);
 

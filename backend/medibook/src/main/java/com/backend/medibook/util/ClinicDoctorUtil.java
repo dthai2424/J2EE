@@ -8,8 +8,10 @@ import com.backend.medibook.entity.Clinic;
 import com.backend.medibook.entity.ClinicDoctor;
 import com.backend.medibook.entity.Doctor;
 import com.backend.medibook.entity.Specialty;
+import lombok.Builder;
 import org.springframework.stereotype.Component;
 
+@Builder
 @Component
 public class ClinicDoctorUtil {
 

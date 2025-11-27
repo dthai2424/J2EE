@@ -2,11 +2,13 @@ package com.backend.medibook.util;
 
 import com.backend.medibook.dto.DoctorDTO;
 import com.backend.medibook.entity.Doctor;
+import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-@Component
 
+@Builder
+@Component
 public class DoctorUtil {
     @Autowired
     private UserUtil userUtil;

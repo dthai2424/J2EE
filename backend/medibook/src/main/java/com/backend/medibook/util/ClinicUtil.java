@@ -2,8 +2,11 @@ package com.backend.medibook.util;
 
 import com.backend.medibook.dto.ClinicDTO;
 import com.backend.medibook.entity.Clinic;
+import lombok.Builder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+@Builder
 @Component
 public class ClinicUtil {
     public boolean validateName(String name){

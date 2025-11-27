@@ -4,8 +4,10 @@ import com.backend.medibook.dto.ClinicCareDTO;
 import com.backend.medibook.entity.Clinic;
 import com.backend.medibook.entity.ClinicCare;
 import com.backend.medibook.entity.Specialty;
+import lombok.Builder;
 import org.springframework.stereotype.Component;
 
+@Builder
 @Component
 public class ClinicCareUtil {
     public ClinicCare modelToEntity(ClinicCareDTO clinicCareDTO, Clinic clinic, Specialty specialty) {
