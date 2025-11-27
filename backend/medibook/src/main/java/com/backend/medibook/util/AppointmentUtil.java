@@ -8,56 +8,31 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppointmentUtil {
 
-    // Inject các Util khác để dùng hàm entityToModel của chúng
-    @Autowired
-    private UserUtil userUtil;
+    @Autowired private UserUtil userUtil;
+    @Autowired private ClinicUtil clinicUtil;
+    @Autowired private DoctorUtil doctorUtil;
+    @Autowired private ClinicCareUtil clinicCareUtil;
+    @Autowired private SlotUtil slotUtil;
 
-    @Autowired
-    private ClinicUtil clinicUtil;
+    public AppointmentDTO entityToModel(Appointment appointment){
+        ClinicDoctor clinicDoctor = appointment.getClinicDoctor();
+        Clinic clinic = clinicDoctor.getClinic();
+        Doctor doctor = clinicDoctor.getDoctor();
+        ClinicCare care = appointment.getClinicCare();
+        Slot slot = appointment.getSlot();
+        User patient = appointment.getUser();
 
-    @Autowired
-    private DoctorUtil doctorUtil;
-
-    @Autowired
-    private ClinicCareUtil clinicCareUtil;
-
-    @Autowired
-    private SlotUtil slotUtil;
-
-    public AppointmentDTO entityToModel(Appointment appointment) {
-        // 1. Lấy các Entity liên quan từ quan hệ trong Appointment
-        // Appointment -> User
-        User patientEntity = appointment.getUser();
-
-        // Appointment -> ClinicDoctor -> Clinic / Doctor
-        ClinicDoctor clinicDoctorEntity = appointment.getClinicDoctor();
-        Clinic clinicEntity = clinicDoctorEntity.getClinic();
-        Doctor doctorEntity = clinicDoctorEntity.getDoctor();
-
-        // Appointment -> ClinicCare
-        ClinicCare careEntity = appointment.getClinicCare();
-
-        // Appointment -> Slot
-        Slot slotEntity = appointment.getSlot();
-
-        // 2. Map sang DTO
         return AppointmentDTO.builder()
                 .appointmentId(appointment.getAppointmentId())
-
-                // --- Map ID (Giữ logic cũ cho Input/Reference) ---
-                .patientId(patientEntity.getUserId())
-                .clinicDoctorId(clinicDoctorEntity.getClinicDoctorId())
-                .clinicCareId(careEntity.getClinicCareId())
-                .slotId(slotEntity.getSlotId())
-
-                // --- Map Object Chi Tiết (Logic Mới cho Frontend hiển thị) ---
-                .patient(userUtil.entityToModel(patientEntity))
-                .clinic(clinicUtil.entityToModel(clinicEntity))
-                .doctor(doctorUtil.entityToModel(doctorEntity))
-                .clinicCare(clinicCareUtil.entityToModel(careEntity))
-                .slot(slotUtil.entityToModel(slotEntity))
-                // ----------------------------------------------------------
-
+                .patientId(patient.getUserId())
+                .clinicDoctorId(clinicDoctor.getClinicDoctorId())
+                .clinicCareId(care.getClinicCareId())
+                .slotId(slot.getSlotId())
+                .patient(userUtil.entityToModel(patient))
+                .clinic(clinicUtil.entityToModel(clinic))
+                .doctor(doctorUtil.entityToModel(doctor))
+                .clinicCare(clinicCareUtil.entityToModel(care))
+                .slot(slotUtil.entityToModel(slot))
                 .createdAt(appointment.getCreatedAt())
                 .appointmentDate(appointment.getAppointmentDate())
                 .status(appointment.getStatus())
@@ -66,16 +41,23 @@ public class AppointmentUtil {
     }
 
     public Appointment modelToEntity(AppointmentDTO appointmentDTO, User patient, ClinicDoctor clinicDoctor, ClinicCare clinicCare, Slot slot) {
-        // Logic này giữ nguyên vì khi lưu xuống DB ta dùng các Entity đã được tìm thấy bởi Service
-        return Appointment.builder()
-                .appointmentId(appointmentDTO.getAppointmentId())
+        // SỬA LỖI TẠI ĐÂY:
+        // Sử dụng builder nhưng KHÔNG set appointmentId nếu id <= 0 (trường hợp tạo mới)
+
+        var builder = Appointment.builder()
                 .user(patient)
                 .clinicDoctor(clinicDoctor)
                 .clinicCare(clinicCare)
                 .slot(slot)
                 .appointmentDate(appointmentDTO.getAppointmentDate())
                 .status(appointmentDTO.getStatus())
-                .active(appointmentDTO.isActive())
-                .build();
+                .active(appointmentDTO.isActive());
+
+        // Chỉ set ID nếu đây là thao tác update (ID > 0)
+        if (appointmentDTO.getAppointmentId() > 0) {
+            builder.appointmentId(appointmentDTO.getAppointmentId());
+        }
+
+        return builder.build();
     }
 }

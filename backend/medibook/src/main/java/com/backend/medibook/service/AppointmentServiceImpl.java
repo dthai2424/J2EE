@@ -7,6 +7,7 @@ import com.backend.medibook.repository.*;
 import com.backend.medibook.util.AppointmentUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Import Transactional
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -34,11 +35,13 @@ public class AppointmentServiceImpl implements AppointmentService {
     private AppointmentUtil appointmentUtil;
 
     @Override
+    @Transactional // Thêm annotation này để quản lý transaction
     public AppointmentDTO create(AppointmentDTO appointmentDTO) {
         Optional<User> patient = userRepository.findById(appointmentDTO.getPatientId());
         Optional<ClinicDoctor> clinicDoctor= clinicDoctorRepository.findById(appointmentDTO.getClinicDoctorId());
         Optional<ClinicCare> clinicCare= clinicCareRepository.findById(appointmentDTO.getClinicCareId());
         Optional<Slot> slot= slotRepository.findById(appointmentDTO.getSlotId());
+
         if(!patient.isPresent()){
             throw new UserNotFoundException("Không tìm thấy user với id:"+appointmentDTO.getPatientId());
         }
@@ -51,11 +54,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         if(!slot.isPresent()){
             throw new SlotNotFoundException("Không tìm thấy slot với id:"+appointmentDTO.getSlotId());
         }
+
+        // (Logic validation giữ nguyên...)
         if (appointmentDTO.getAppointmentDate().isBefore(LocalDateTime.now())) {
             throw new AppointmentDateInvalidException("Không thể đặt lịch cho một thời điểm trong quá khứ.");
         }
-
-        // 2.2: Dịch vụ được chọn phải thuộc phòng khám nơi bác sĩ làm việc.
         if (!clinicCare.get().getClinic().getClinicId().equals(clinicDoctor.get().getClinic().getClinicId())) {
             throw new ClinicCareNotFoundException("Dịch vụ đã chọn không được cung cấp tại cơ sở khám của bác sĩ này.");
         }
@@ -64,19 +67,18 @@ public class AppointmentServiceImpl implements AppointmentService {
         )){
             throw new AppointmentAlreadyExistException("Cuộc hẹn đã tồn tại với bác sĩ, khung giờ và ngày đã chọn.");
         }
+
         appointmentDTO.setStatus(Status.PENDING);
 
+        // Tạo entity mới (Lưu ý: appointmentUtil đã được sửa để không set ID = 0)
         Appointment newAppointment = appointmentUtil.modelToEntity(appointmentDTO, patient.get(), clinicDoctor.get(), clinicCare.get(), slot.get());
 
-        // 3.3: Lưu vào cơ sở dữ liệu
         Appointment savedAppointment = appointmentRepository.save(newAppointment);
 
-        // 3.4: Chuyển đổi lại sang DTO để trả về cho client
         return appointmentUtil.entityToModel(savedAppointment);
-
-
     }
 
+    // ... (Các method khác giữ nguyên)
     @Override
     public AppointmentDTO cancelAppointmentAsPatient(Integer appointmentId, Integer userId) {
         Optional<Appointment> appointment=appointmentRepository.findByAppointmentId(appointmentId);
@@ -216,5 +218,4 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
         return appointmentDTOS;
     }
-
 }
