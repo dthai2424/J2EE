@@ -13,7 +13,9 @@ import { AdminLayout } from "./pages/admin/AdminLayout";
 import { DoctorManager } from "./pages/admin/DoctorManager";
 import { ClinicManager } from "./pages/admin/ClinicManager";
 import { SpecialtyManager } from "./pages/admin/SpecialtyManager";
-
+import { AppointmentManager } from "./pages/admin/AppointmentManager.jsx";
+import { SlotManager } from "./pages/admin/SlotManager.jsx";
+import { ClinicCareManager } from "./pages/admin/ClinicCareManager.jsx";
 function App() {
   // 2. Lấy đường dẫn hiện tại
   const location = useLocation();
@@ -44,6 +46,9 @@ function App() {
           <Route path="doctors" element={<DoctorManager />} />
           <Route path="clinics" element={<ClinicManager />} />
           <Route path="specialties" element={<SpecialtyManager />} />
+          <Route path="appointments" element={<AppointmentManager />} />
+          <Route path="slots" element={<SlotManager />} />
+          <Route path="cliniccare" element={<ClinicCareManager />} />
         </Route>
       </Routes>
 

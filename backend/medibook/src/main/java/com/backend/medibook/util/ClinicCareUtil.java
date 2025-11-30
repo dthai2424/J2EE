@@ -18,15 +18,17 @@ public class ClinicCareUtil {
     private SpecialtyUtil specialtyUtil;
 
     public ClinicCare modelToEntity(ClinicCareDTO clinicCareDTO, Clinic clinic, Specialty specialty) {
-        return ClinicCare.builder()
-                .clinicCareId(clinicCareDTO.getClinicCareId())
+        var clinicCare=ClinicCare.builder()
                 .clinic(clinic)
                 .specialty(specialty)
                 .name(clinicCareDTO.getName())
                 .description(clinicCareDTO.getDescription())
                 .price(clinicCareDTO.getPrice())
-                .active(clinicCareDTO.isActive())
-                .build();
+                .active(clinicCareDTO.isActive());
+        if(clinicCareDTO.getClinicId()>0){
+            clinicCare.clinicCareId(clinicCareDTO.getClinicCareId());
+        }
+        return clinicCare.build();
     }
 
     public ClinicCareDTO entityToModel(ClinicCare clinicCare) {

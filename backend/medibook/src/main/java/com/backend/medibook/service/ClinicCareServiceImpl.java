@@ -67,35 +67,47 @@ public class ClinicCareServiceImpl implements ClinicCareService {
     }
 
     @Override
-    //Chỉ cho update name description và price
+    // Chỉ cho update name description và price (và các mối quan hệ)
     public ClinicCareDTO update(Integer clinicCareId, ClinicCareDTO clinicCareDTO) {
-        clinicCareDTO.setName(clinicCareDTO.getName().toLowerCase());
-        clinicCareDTO.setDescription(clinicCareDTO.getDescription().toLowerCase());
-        Optional<ClinicCare> existingClinicCare=clinicCareRepository.findById(clinicCareId);
 
-        if(existingClinicCare.isEmpty()){
+        // --- BƯỚC 1: LẤY ENTITY ĐANG ĐƯỢC QUẢN LÝ (Managed Entity) ---
+        Optional<ClinicCare> existingClinicCareOpt = clinicCareRepository.findById(clinicCareId);
+
+        if(existingClinicCareOpt.isEmpty()){
             throw new ClinicNotFoundException("Không tìm thấy dịch vụ với id:"+clinicCareId);
         }
+        ClinicCare existingClinicCare = existingClinicCareOpt.get(); // Entity cũ, đang được quản lý
 
-        Optional<Clinic> clinic=clinicRepository.findById(clinicCareDTO.getClinicId());
-        Optional<Specialty> specialty=specialtyRepository.findById(clinicCareDTO.getSpecialtyId());
+        // --- BƯỚC 2: VALIDATION INPUTS VÀ TÌM KIẾM CÁC MỐI QUAN HỆ ---
+        clinicCareDTO.setName(clinicCareDTO.getName().toLowerCase());
+        clinicCareDTO.setDescription(clinicCareDTO.getDescription().toLowerCase());
 
-        if(clinic.isEmpty()){
+        Optional<Clinic> clinicOpt = clinicRepository.findById(clinicCareDTO.getClinicId());
+        Optional<Specialty> specialtyOpt = specialtyRepository.findById(clinicCareDTO.getSpecialtyId());
+
+        if(clinicOpt.isEmpty()){
             throw new ClinicNotFoundException("Không tìm thấy clinic với id:"+clinicCareDTO.getClinicId());
         }
-        if(specialty.isEmpty()){
+        if(specialtyOpt.isEmpty()){
             throw new SpecialtyNotFoundException("Không tìm thấy chuyên khoa với id:"+clinicCareDTO.getSpecialtyId());
         }
-        if(!clinicCareUtil.validateName(clinicCareDTO.getName())){
-            throw new ClinicCareNameInvalidException("Tên dịch vụ không hợp lệ");
-        }
+
         if(!clinicCareUtil.validatePrice(clinicCareDTO.getPrice())) {
             throw new ClinicCarePriceInvalidException("Giá dịch vụ phải là số dương");
         }
-        ClinicCare clinicCare= clinicCareUtil.modelToEntity(clinicCareDTO,clinic.get(),specialty.get());
-        clinicCare.setClinicCareId(clinicCareId);
-        clinicCare=clinicCareRepository.save(clinicCare);
-        return clinicCareUtil.entityToModel(clinicCare);
+
+        // --- BƯỚC 3: CẬP NHẬT CÁC TRƯỜNG CỦA ENTITY ĐANG ĐƯỢC QUẢN LÝ ---
+        existingClinicCare.setClinic(clinicOpt.get());         // Cập nhật Clinic
+        existingClinicCare.setSpecialty(specialtyOpt.get());   // Cập nhật Specialty
+        existingClinicCare.setName(clinicCareDTO.getName());   // Cập nhật Tên
+        existingClinicCare.setDescription(clinicCareDTO.getDescription());
+        existingClinicCare.setPrice(clinicCareDTO.getPrice()); // Cập nhật Giá
+        existingClinicCare.setActive(clinicCareDTO.isActive());// Cập nhật Trạng thái
+
+        // --- BƯỚC 4: LƯU (JPA sẽ nhận ra Entity này đã được quản lý và thực hiện UPDATE) ---
+        ClinicCare updatedClinicCare = clinicCareRepository.save(existingClinicCare);
+
+        return clinicCareUtil.entityToModel(updatedClinicCare);
     }
 
     @Override

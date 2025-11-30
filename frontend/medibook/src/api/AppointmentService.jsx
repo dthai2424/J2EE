@@ -1,22 +1,31 @@
 import axiosClient from "./axiosClient";
 
 export const AppointmentService = {
-  // Lấy danh sách lịch hẹn theo User ID
   getByUserId: (userId) => {
     return axiosClient.get(`/appointment/user/${userId}`);
   },
+  getAllAppointments: () => {
+    return axiosClient.get("/appointment/all");
+  },
 
-  // Tạo cuộc hẹn mới
   create: (appointmentData) => {
     return axiosClient.post("/appointment/create", appointmentData);
   },
 
-  // --- THÊM HÀM NÀY ---
-  // Lấy danh sách lịch hẹn của bác sĩ trong một ngày cụ thể
   getAppointmentsByDoctorAndDate: (doctorId, date) => {
-    // date format: YYYY-MM-DD
     return axiosClient.get(`/appointment/doctor/${doctorId}/date`, {
       params: { date },
     });
+  },
+  confirm: (appointmentId) => {
+    return axiosClient.put(`/appointment/confirm/${appointmentId}`);
+  },
+
+  complete: (appointmentId) => {
+    return axiosClient.put(`/appointment/complete/${appointmentId}`);
+  },
+
+  cancelAsAdmin: (appointmentId) => {
+    return axiosClient.put(`/appointment/cancel/admin/${appointmentId}`);
   },
 };

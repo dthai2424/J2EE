@@ -26,7 +26,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
 
-    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username không hợp lệ")
+
     @Column(nullable =false, unique=true)
     private String username;
 
@@ -35,7 +35,7 @@ public class User implements UserDetails {
 
     private String name;
 
-    @Email(message="Email phải hợp lệ")
+
     @Column(nullable=false, unique=true)
     private String email;
 

@@ -13,7 +13,10 @@ public class SpecialtyUtil {
         return specialtyDTO;
     }
     public Specialty modelToEntity(SpecialtyDTO specialtyDTO){
-        Specialty specialty=Specialty.builder().specialtyId(specialtyDTO.getSpecialtyId()).name(specialtyDTO.getName()).description(specialtyDTO.getDescription()).active(specialtyDTO.isActive()).build();
-        return specialty;
+        var specialty=Specialty.builder().name(specialtyDTO.getName()).description(specialtyDTO.getDescription()).active(specialtyDTO.isActive());
+        if(specialtyDTO.getSpecialtyId()>0){
+            specialty.specialtyId(specialtyDTO.getSpecialtyId());
+        }
+        return specialty.build();
     }
 }

@@ -35,7 +35,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private AppointmentUtil appointmentUtil;
 
     @Override
-    @Transactional // Thêm annotation này để quản lý transaction
+    @Transactional
     public AppointmentDTO create(AppointmentDTO appointmentDTO) {
 
         Optional<User> patient = userRepository.findById(appointmentDTO.getPatientId());
@@ -56,7 +56,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new SlotNotFoundException("Không tìm thấy slot với id:"+appointmentDTO.getSlotId());
         }
 
-        // (Logic validation giữ nguyên...)
+
         if (appointmentDTO.getAppointmentDate().isBefore(LocalDateTime.now())) {
             throw new AppointmentDateInvalidException("Không thể đặt lịch cho một thời điểm trong quá khứ.");
         }
@@ -71,7 +71,6 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         appointmentDTO.setStatus(Status.PENDING);
 
-        // Tạo entity mới (Lưu ý: appointmentUtil đã được sửa để không set ID = 0)
         Appointment newAppointment = appointmentUtil.modelToEntity(appointmentDTO, patient.get(), clinicDoctor.get(), clinicCare.get(), slot.get());
 
         Appointment savedAppointment = appointmentRepository.save(newAppointment);
@@ -79,7 +78,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         return appointmentUtil.entityToModel(savedAppointment);
     }
 
-    // ... (Các method khác giữ nguyên)
+
     @Override
     public AppointmentDTO cancelAppointmentAsPatient(Integer appointmentId, Integer userId) {
         Optional<Appointment> appointment=appointmentRepository.findByAppointmentId(appointmentId);
@@ -108,17 +107,24 @@ public class AppointmentServiceImpl implements AppointmentService {
         return appointmentUtil.entityToModel(cancelledAppointment);
     }
 
-
+    @Override
+    public List<AppointmentDTO> findAllAppointments() {
+        List<Appointment> appointments = appointmentRepository.findAll();
+        List<AppointmentDTO> appointmentDTOS = new ArrayList<>();
+        for (Appointment appointment : appointments) {
+            appointmentDTOS.add(appointmentUtil.entityToModel(appointment));
+        }
+        return appointmentDTOS;
+    }
     @Override
     public AppointmentDTO confirmAppointment(Integer appointmentId) {
-        // ===== BƯỚC 1: TÌM CUỘC HẸN =====
+
         Optional<Appointment> appointment=appointmentRepository.findByAppointmentId(appointmentId);
         if(appointment.isEmpty()){
             throw new AppointmentNotFoundException("Không tìm thấy appointment với id:"+appointmentId);
         }
 
 
-        // Chỉ xác nhận được khi cuộc hẹn đang ở trạng thái "Chờ xác nhận".
         if(appointment.get().getStatus() != Status.PENDING){
             throw new AppointmentInvalidStateException("Chỉ có thể xác nhận cuộc hẹn đang ở trạng thái 'Chờ xác nhận'.");
         }
@@ -136,11 +142,11 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new AppointmentNotFoundException("Không tìm thấy appointment với id:"+appointmentId);
         }
 
-        // Chỉ hoàn thành được khi cuộc hẹn đang ở trạng thái "Xác nhận".
+
         if(appointment.get().getStatus() != Status.CONFIRMED){
             throw new AppointmentInvalidStateException("Chỉ có thể hoàn thành cuộc hẹn đang ở trạng thái 'Xác nhận'.");
         }
-        // Một cuộc hẹn chỉ nên được đánh dấu là hoàn thành sau khi thời gian hẹn đã qua.
+
         if (appointment.get().getAppointmentDate().isAfter(LocalDateTime.now())) {
             throw new AppointmentInvalidStateException("Không thể hoàn thành một cuộc hẹn chưa tới giờ khám.");
         }
@@ -198,23 +204,20 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<AppointmentDTO> findAppointmentsByDoctorAndDate(Integer doctorId, LocalDate date) {
-        // ===== BƯỚC 1: KIỂM TRA SỰ TỒN TẠI CỦA BÁC SĨ =====
+
         if (!doctorRepository.existsById(doctorId)) {
             throw new DoctorIdNotFoundException("Không tìm thấy bác sĩ với ID: " + doctorId);
         }
 
-        // ===== BƯỚC 2: TÍNH TOÁN KHOẢNG THỜI GIAN TRONG NGÀY =====
-        // Thời điểm bắt đầu của ngày (ví dụ: 2023-10-27 00:00:00)
         LocalDateTime startOfDay = date.atStartOfDay();
-        // Thời điểm kết thúc của ngày (ví dụ: 2023-10-27 23:59:59.999...)
+
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
 
-        // ===== BƯỚC 3: TRUY VẤN CƠ SỞ DỮ LIỆU =====
-        // Sử dụng phương thức repository đã được sửa lại cho đúng
+
         List<Appointment> appointments = appointmentRepository
                 .findByClinicDoctor_Doctor_DoctorIdAndAppointmentDateBetween(doctorId, startOfDay, endOfDay);
 
-        // ===== BƯỚC 4: CHUYỂN ĐỔI VÀ TRẢ VỀ KẾT QUẢ =====
+
         List<AppointmentDTO> appointmentDTOS = new ArrayList<>();
         for (Appointment appointment : appointments) {
             appointmentDTOS.add(appointmentUtil.entityToModel(appointment));

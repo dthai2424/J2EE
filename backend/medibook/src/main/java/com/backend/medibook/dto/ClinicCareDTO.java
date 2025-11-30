@@ -9,11 +9,9 @@ import lombok.*;
 public class ClinicCareDTO {
     private int clinicCareId;
 
-    // Input IDs
     private int clinicId;
     private int specialtyId;
 
-    // Output Objects (Thêm mới)
     private ClinicDTO clinic;
     private SpecialtyDTO specialty;
 

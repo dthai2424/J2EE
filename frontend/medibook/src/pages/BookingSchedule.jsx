@@ -27,29 +27,23 @@ export function BookingSchedule() {
 
   const { clinic, doctor, service } = location.state || {};
 
-  // --- STATE ---
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
 
-  // Slot Data
   const [morningSlots, setMorningSlots] = useState([]);
   const [afternoonSlots, setAfternoonSlots] = useState([]);
 
-  // Selection & Loading
   const [selectedSlot, setSelectedSlot] = useState(null);
 
-  // --- QUAN TRỌNG: State cho bookedSlotIds ---
   const [bookedSlotIds, setBookedSlotIds] = useState([]);
 
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
-  // Alert & Submit
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
   const [alertType, setAlertType] = useState("success");
 
-  // --- LOGIC NGÀY GIỚI HẠN ---
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -57,14 +51,12 @@ export function BookingSchedule() {
   const maxDate = new Date(tomorrow);
   maxDate.setDate(maxDate.getDate() + 15);
 
-  // Redirect nếu thiếu data
   useEffect(() => {
     if (!clinic || !doctor || !service) {
       navigate("/booking");
     }
   }, [clinic, doctor, service, navigate]);
 
-  // 1. Lấy danh sách Slot (Sáng/Chiều)
   useEffect(() => {
     const fetchSlots = async () => {
       setLoadingSlots(true);
@@ -84,17 +76,14 @@ export function BookingSchedule() {
     fetchSlots();
   }, []);
 
-  // 2. Khi chọn ngày -> Gọi API check xem slot nào đã bị đặt
   useEffect(() => {
     const fetchBookedSlots = async () => {
       if (!selectedDate || !doctor) return;
 
       setCheckingAvailability(true);
 
-      // Reset booked slots trước khi fetch mới
       setBookedSlotIds([]);
 
-      // --- FIX: Robust way to get doctorId for checking schedule ---
       let doctorIdToCheck = null;
 
       if (doctor.doctor && doctor.doctor.doctorId) {
@@ -147,7 +136,6 @@ export function BookingSchedule() {
     }
   }, [selectedDate, doctor]);
 
-  // --- FORMATTERS ---
   const formatCurrency = (val) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -159,7 +147,6 @@ export function BookingSchedule() {
     return timeString.substring(0, 5);
   };
 
-  // --- CALENDAR LOGIC ---
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
 
@@ -251,10 +238,8 @@ export function BookingSchedule() {
     const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
     const day = String(selectedDate.getDate()).padStart(2, "0");
 
-    // --- FIX: Construct LocalDateTime string instead of just date ---
-    // Backend expects "YYYY-MM-DDTHH:mm:ss"
     const timeString = selectedSlot.startTime;
-    // Ensure time format is HH:mm:ss (e.g. "08:00:00")
+
     const time = timeString.length === 5 ? `${timeString}:00` : timeString;
     const appointmentDateTime = `${year}-${month}-${day}T${time}`;
 

@@ -32,12 +32,16 @@ public class ClinicDoctorUtil {
     }
 
     public ClinicDoctor modelToEntity(ClinicDoctorDTO clinicDoctorDTO, Clinic clinic, Doctor doctor , Specialty specialty){
-        return ClinicDoctor.builder()
-                .clinicDoctorId(clinicDoctorDTO.getClinicDoctorId()) // Cần thiết nếu cập nhật
+
+        var clinicDoctor=  ClinicDoctor.builder()
+                 // Cần thiết nếu cập nhật
                 .clinic(clinic)      // Thiết lập Clinic
                 .doctor(doctor)      // Thiết lập Doctor
                 .specialty(specialty) // Thiết lập Specialty
-                .active(clinicDoctorDTO.isActive())
-                .build();
+                .active(clinicDoctorDTO.isActive());
+        if(clinicDoctorDTO.getClinicDoctorId()>0){
+            clinicDoctor.clinicDoctorId(clinicDoctorDTO.getClinicDoctorId());
+        }
+        return clinicDoctor.build();
     }
 }

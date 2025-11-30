@@ -221,11 +221,8 @@ export function AuthPage() {
         loginData.password
       );
 
-      // Cập nhật AuthContext ngay lập tức
+      // 1. Cập nhật AuthContext ngay lập tức để lưu Token & User
       login(response.data.accessToken, response.data.user);
-
-      // Lấy role của user để kiểm tra
-      const userRole = response.data.user.role;
 
       console.log("Login Successful:", response.data);
       setGlobalMessage({
@@ -233,21 +230,23 @@ export function AuthPage() {
         type: "success",
       });
 
-      // Chuyển trang sau 1s (Điều hướng dựa trên Role)
+      // 2. Kiểm tra Role để điều hướng
+      const userRole = response.data.user.role;
+      console.log(userRole);
+      // Delay 1s để người dùng thấy thông báo rồi chuyển trang
       setTimeout(() => {
-        if (userRole === "Admin") {
-          // Nếu là Admin -> Bay thẳng vào trang quản lý
-          navigate("/admin/doctors");
+        if (userRole == "Admin") {
+          // Nếu là Admin -> Chuyển đến trang AdminLayout
+          navigate("/admin/clinics");
         } else {
-          // Nếu là User thường/Bác sĩ -> Về trang chủ
+          // Nếu là User thường hoặc Bác sĩ -> Về trang chủ
           navigate("/");
         }
-      }, 1000);
+      }, 3000);
     } catch (err) {
       let errorMessage =
         "Đăng nhập thất bại. Vui lòng kiểm tra Username và Password.";
       if (err.response && err.response.data) {
-        // Backend có thể trả về string hoặc object, xử lý an toàn
         errorMessage =
           typeof err.response.data === "string"
             ? err.response.data

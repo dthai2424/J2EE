@@ -7,7 +7,7 @@ import java.util.List;
 public interface AppointmentService {
 
     // ===== CHỨC NĂNG CHO BỆNH NHÂN =====
-
+    List<AppointmentDTO> findAllAppointments();
     AppointmentDTO create(AppointmentDTO appointmentDTO);
 
     /**

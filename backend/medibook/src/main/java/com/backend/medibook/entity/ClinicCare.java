@@ -25,12 +25,12 @@ public class ClinicCare {
     @JoinColumn(name = "specialtyId", nullable = false)
     private Specialty specialty;
 
-    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Tên chuyên khoa không hợp lệ")
+
     private String name;
 
     private String description;
 
-    @Positive(message="Giá phải là số dương")
+
     private long price;
 
     private boolean active=true;

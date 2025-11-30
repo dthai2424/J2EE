@@ -1,7 +1,9 @@
 package com.backend.medibook.util;
 
 import com.backend.medibook.dto.ClinicDTO;
+import com.backend.medibook.dto.DoctorDTO;
 import com.backend.medibook.entity.Clinic;
+import com.backend.medibook.entity.Doctor;
 import lombok.Builder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -29,7 +31,11 @@ public class ClinicUtil {
         return clinicDTO;
     }
     public Clinic modelToEntity(ClinicDTO clinicDTO){
-        Clinic clinic=Clinic.builder().clinicId(clinicDTO.getClinicId()).name(clinicDTO.getName()).email(clinicDTO.getEmail()).phoneNumber(clinicDTO.getPhoneNumber()).address(clinicDTO.getAddress()).active(clinicDTO.isActive()).build();
-        return clinic;
+        var clinic=Clinic.builder().name(clinicDTO.getName()).email(clinicDTO.getEmail()).phoneNumber(clinicDTO.getPhoneNumber()).address(clinicDTO.getAddress()).active(clinicDTO.isActive());
+        if(clinicDTO.getClinicId()>0){
+            clinic.clinicId(clinicDTO.getClinicId());
+        }
+        return clinic.build();
     }
+
 }

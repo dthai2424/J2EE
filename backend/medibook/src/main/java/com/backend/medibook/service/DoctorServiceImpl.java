@@ -29,7 +29,7 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     public DoctorDTO create(UserDTO userDTO,String password, DoctorDTO doctorDTO) {
-        userDTO.setRole(Role.valueOf("DOCTOR"));
+        userDTO.setRole(Role.valueOf("Doctor"));
         userDTO=userService.create(userDTO,password);
         doctorDTO.setUser(userDTO);
         Doctor doctor=doctorRepository.save(doctorUtil.modelToEntity(doctorDTO));

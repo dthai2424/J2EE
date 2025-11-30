@@ -47,7 +47,11 @@ public class AppointmentController {
         AppointmentDTO cancelledAppointment = appointmentService.cancelAppointmentAsPatient(appointmentId, userId);
         return ResponseEntity.ok(cancelledAppointment);
     }
-
+    @GetMapping("/all")
+    public ResponseEntity<List<AppointmentDTO>> getAllAppointments() {
+        List<AppointmentDTO> appointments = appointmentService.findAllAppointments();
+        return ResponseEntity.ok(appointments);
+    }
     // === CHỨC NĂNG CHO ADMIN/LỄ TÂN ===
 
     /**

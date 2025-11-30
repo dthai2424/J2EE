@@ -35,13 +35,24 @@ public class SpecialtyServiceImpl implements SpecialtyService {
 
     @Override
     public SpecialtyDTO update(SpecialtyDTO specialtyDTO) {
-        specialtyDTO.setName(specialtyDTO.getName().toLowerCase());
-        specialtyDTO.setDescription(specialtyDTO.getDescription().toLowerCase());
-        if(specialtyDTO.getName()==null){
-            throw new SpecialtyNameInvalidException("Tên chuyên khoa không hợp lệ");
+        Optional<Specialty> specialtyOpt = specialtyRepository.findById(specialtyDTO.getSpecialtyId());
+
+        if (specialtyOpt.isEmpty()) {
+            throw new SpecialtyNotFoundException("Không tìm thấy chuyên khoa với ID: " + specialtyDTO.getSpecialtyId());
         }
-        Specialty specialty=Specialty.builder().name(specialtyDTO.getName()).description(specialtyDTO.getDescription()).build();
-        return specialtyRepository.save(specialty)!=null?specialtyUtil.entityToModel(specialty):null;
+
+        Specialty existingSpecialty = specialtyOpt.get();
+
+
+        String newName = specialtyDTO.getName().toLowerCase();
+
+
+        existingSpecialty.setName(newName);
+        existingSpecialty.setDescription(specialtyDTO.getDescription().toLowerCase());
+        existingSpecialty.setActive(specialtyDTO.isActive());
+        Specialty updatedSpecialty = specialtyRepository.save(existingSpecialty);
+
+        return specialtyUtil.entityToModel(updatedSpecialty);
     }
 
     @Override

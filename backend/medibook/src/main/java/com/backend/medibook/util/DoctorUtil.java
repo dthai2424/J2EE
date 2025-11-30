@@ -25,13 +25,19 @@ public class DoctorUtil {
     }
 
     public Doctor modelToEntity(DoctorDTO doctorDTO){
-        Doctor doctor = Doctor.builder()
-                .doctorId(doctorDTO.getDoctorId())
+        // SỬA LỖI: Chỉ set doctorId nếu là update (ID > 0).
+        // Nếu ID là 0, để mặc định không set, JPA sẽ tự động tạo ID.
+
+        var builder = Doctor.builder()
                 .user(userUtil.modelToEntity(doctorDTO.getUser()))
                 .licenseNumber(doctorDTO.getLicenseNumber())
                 .careerStartDate(doctorDTO.getCareerStartDate())
-                .active(doctorDTO.isActive())
-                .build();
-        return doctor;
+                .active(doctorDTO.isActive());
+
+        if (doctorDTO.getDoctorId() > 0) {
+            builder.doctorId(doctorDTO.getDoctorId());
+        }
+
+        return builder.build();
     }
 }

@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 public class AppointmentDTO {
     private int appointmentId;
 
-    // --- INPUT FIELDS (Để Create) ---
+
     private int patientId;
     private int clinicDoctorId;
     private int clinicCareId;
     private int slotId;
 
-    // --- OUTPUT FIELDS (Để Display) ---
+
     private UserDTO patient;
     private ClinicDTO clinic;
     private DoctorDTO doctor;
